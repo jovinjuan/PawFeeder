@@ -76,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d("L", "Login:success");
-                            toMain();
+                            toHomePage();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("L", "Login:failure", task.getException());
@@ -87,6 +87,11 @@ public class LoginActivity extends AppCompatActivity {
 
     public void toMain(){
         Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+
+    public void toHomePage(){
+        Intent intent = new Intent(this, HomePageActivity.class);
         startActivity(intent);
     }
 }

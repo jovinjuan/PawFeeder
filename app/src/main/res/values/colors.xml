@@ -6,4 +6,8 @@
     <color name="iconblue">#B2009AFF</color>009AFF
     <color name="primaryblue">#009AFF</color>
     <color name="gray">#E5E5E5</color>
+    <color name="orange">#FFA654</color>
+    <color name="red">#FF0400</color>
+    <color name="green">#1FC330</color>
+    <color name="dark_gray">#5F5F5F</color>
 </resources>
