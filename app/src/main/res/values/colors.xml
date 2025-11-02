@@ -10,4 +10,5 @@
     <color name="red">#FF0400</color>
     <color name="green">#1FC330</color>
     <color name="dark_gray">#5F5F5F</color>
+    <color name="nav_active">#4A90E2</color>
 </resources>

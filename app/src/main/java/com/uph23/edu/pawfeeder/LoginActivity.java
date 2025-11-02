@@ -91,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void toHomePage(){
-        Intent intent = new Intent(this, HomePageActivity.class);
+        Intent intent = new Intent(this, HomeFragment.class);
         startActivity(intent);
     }
 }
