@@ -2,6 +2,7 @@ package com.uph23.edu.pawfeeder;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
@@ -10,20 +11,26 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 
 public class HomeFragment extends Fragment {
-    TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvBattery;
+    TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvBattery, txvUsername;
     Button btnFeedNow;
-
-    Boolean servo = false;
+    ListView lsvTask;
     private static final String TAG = "HomeFragment";
 
     public HomeFragment() {
@@ -46,6 +53,8 @@ public class HomeFragment extends Fragment {
 
         // Get the root database reference
         DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("pawfeeder");
+
+        readData();
 
         // --- A. Button OnTouchListener for Servo Control ---
         btnFeedNow.setOnTouchListener((v, event) -> {
@@ -111,6 +120,38 @@ public class HomeFragment extends Fragment {
         txvMinuman = view.findViewById(R.id.txvMinuman);
         txvStatusMinum = view.findViewById(R.id.txvStatusMinum);
         txvBattery = view.findViewById(R.id.txvBattery);
+        txvUsername = view.findViewById(R.id.txvUsername);
         btnFeedNow = view.findViewById(R.id.btnFeedNow);
+        lsvTask = view.findViewById(R.id.lsvTask);
     }
+
+    public void readData() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+
+        if (auth.getCurrentUser() != null) {
+            String userId = auth.getCurrentUser().getUid();
+
+            db.collection("Users").document(userId)
+                    .get()
+                    .addOnSuccessListener(document -> {
+                        if (document.exists()) {
+                            String username = document.getString("Username");
+                            txvUsername.setText("Hi, " + username);
+                            Log.d("Firestore", "User found: " + username);
+                        } else {
+                            txvUsername.setText("Hi, User");
+                            Log.d("Firestore", "No such document");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        txvUsername.setText("Hi, User");
+                        Log.w("Firestore", "Error getting user data", e);
+                    });
+        } else {
+            txvUsername.setText("Hi, Guest");
+            Log.d("Firestore", "User not logged in");
+        }
+    }
+
 }

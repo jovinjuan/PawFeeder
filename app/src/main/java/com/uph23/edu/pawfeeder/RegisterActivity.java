@@ -47,41 +47,31 @@ public class RegisterActivity extends AppCompatActivity {
         });
         init();
 
-        txtSignIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toLogin();
+        txtSignIn.setOnClickListener(v -> toLogin());
+
+        btnSubmit.setOnClickListener(v -> {
+            String email = edtEmail.getText().toString().trim();
+            String password = edtPassword.getText().toString().trim();
+            String confirmPassword = edtConfirmPassword.getText().toString().trim();
+            String username = edtUsername.getText().toString().trim();
+
+            if (!password.equals(confirmPassword)) {
+                edtPassword.setError("Password tidak sama!");
+                edtConfirmPassword.setError("Password tidak sama!");
+                edtConfirmPassword.requestFocus();
+                return;
             }
-        });
 
-        btnSubmit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String email = edtEmail.getText().toString().trim();
-                String password = edtPassword.getText().toString();
-                String confirmPassword =  edtConfirmPassword.getText().toString().trim();
-                String username =  edtUsername.getText().toString().trim();
-
-                if (!password.equals(confirmPassword)) {
-                    edtPassword.setError("Password tidak sama!");
-                    edtConfirmPassword.setError("Password tidak sama!");
-                    edtConfirmPassword.requestFocus();
-                    return;
-                }
-
-                if (email.isEmpty() || password.isEmpty() || username.isEmpty()) {
-                    Log.w("Register", "Input tidak boleh kosong");
-                    return;
-                }
-
-                register(email, password);
-                registerUser(username, email);
+            if (email.isEmpty() || password.isEmpty() || username.isEmpty()) {
+                Log.w("Register", "Input tidak boleh kosong");
+                return;
             }
-        });
 
+            register(username, email, password);
+        });
     }
 
-    public void init(){
+    private void init() {
         edtUsername = findViewById(R.id.edtUsername);
         edtEmail = findViewById(R.id.edtEmail);
         edtPassword = findViewById(R.id.edtPassword);
@@ -90,49 +80,40 @@ public class RegisterActivity extends AppCompatActivity {
         btnSubmit = findViewById(R.id.btnSubmit);
     }
 
-    public void toLogin(){
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
+    private void toLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
     }
 
-    public void registerUser(String username, String email){
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map<String, Object> Users = new HashMap<>();
-        Users.put("Username", username);
-        Users.put("Email", email);
-
-
-// Add a new document with a generated ID
-        db.collection("Users")
-                .add(Users)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d("USERS", "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("USERS", "Error adding document", e);
-                    }
-                });
-    }
-
-    public void register(String email, String password){
+    private void register(String username, String email, String password) {
         mAuth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d("Register", "RegisterWithCustomToken:success");
-                            toLogin();
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w("Register", "RegisterWithCustomToken:failure", task.getException());
-                        }
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Register", "createUserWithEmail:success");
+
+                        // Ambil UID user yang baru dibuat
+                        String userId = mAuth.getCurrentUser().getUid();
+
+                        // Buat data user
+                        Map<String, Object> user = new HashMap<>();
+                        user.put("Username", username);
+                        user.put("Email", email);
+
+                        // Simpan ke Firestore dengan UID sebagai document ID
+                        db.collection("Users").document(userId)
+                                .set(user)
+                                .addOnSuccessListener(aVoid ->
+                                        Log.d("Register", "User added to Firestore: " + userId))
+                                .addOnFailureListener(e ->
+                                        Log.w("Register", "Error adding user to Firestore", e));
+
+                        // Pindah ke login setelah register
+                        toLogin();
+
+                    } else {
+                        Log.w("Register", "createUserWithEmail:failure", task.getException());
                     }
                 });
     }
