@@ -11,4 +11,9 @@
     <color name="green">#1FC330</color>
     <color name="dark_gray">#5F5F5F</color>
     <color name="nav_active">#4A90E2</color>
+    <color name="task_blue">#ACCDE2</color>
+    <color name="red_priority">#FF6B6B</color>
+    <color name="orange_priority">#FFA654</color>
+    <color name="green_priority">#4CAF50</color>
+
 </resources>

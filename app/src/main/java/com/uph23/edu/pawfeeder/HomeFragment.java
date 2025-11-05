@@ -1,9 +1,12 @@
 package com.uph23.edu.pawfeeder;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,11 +14,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,96 +28,54 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.uph23.edu.pawfeeder.adapter.TaskAdapter;
+import com.uph23.edu.pawfeeder.model.Task;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 
 public class HomeFragment extends Fragment {
-    TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvBattery, txvUsername;
+    TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvBattery, txvUsername, btnToCreate;
     Button btnFeedNow;
-    ListView lsvTask;
+    RecyclerView lsvTask;
+    ImageView btnDone;
     private static final String TAG = "HomeFragment";
 
-    public HomeFragment() {
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
+    private ArrayList<Task> taskList;
+    private TaskAdapter adapter;
 
-    }
+    public HomeFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-
         init(view);
+        setupFirestore();
+        readData();
+        setupServoControl();
+
+        btnToCreate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toCreateTask();
+            }
+        });
 
         return view;
     }
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
 
-        // Get the root database reference
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("pawfeeder");
+    @Override public void onResume() { super.onResume(); loadTasks(); }
 
-        readData();
-
-        // --- A. Button OnTouchListener for Servo Control ---
-        btnFeedNow.setOnTouchListener((v, event) -> {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    FirebaseDatabase.getInstance()
-                            .getReference("pawfeeder/makan/servo")
-                            .setValue(true);
-                    Log.d("ServoControl", "Servo ON");
-                    return true;
-
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-                    FirebaseDatabase.getInstance()
-                            .getReference("pawfeeder/makan/servo")
-                            .setValue(false);
-                    Log.d("ServoControl", "Servo OFF");
-                    return true;
-            }
-            return false;
-        });
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    // Update Food Stock
-                    Integer stokMakanan = dataSnapshot.child("makan/stok_makanan").getValue(Integer.class);
-                    if (stokMakanan != null) {
-                        txvMakanan.setText(stokMakanan + "% left");
-                    } else {
-                        txvMakanan.setText("N/A"); // Handle missing data gracefully
-                    }
-
-                    // Update Water Stock
-                    Integer stokMinuman = dataSnapshot.child("minum/stok_minuman").getValue(Integer.class);
-                    if (stokMinuman != null) {
-                        txvMinuman.setText(stokMinuman + "% left");
-                    } else {
-                        txvMinuman.setText("N/A"); // Handle missing data gracefully
-                    }
-
-                    // Update Battery
-                    Long battery = dataSnapshot.child("baterai/persentase").getValue(Long.class);
-                    if (battery != null) {
-                        txvBattery.setText(battery + "%");
-                    } else {
-                        txvBattery.setText("0%");
-                    }
-
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Failed to read value.", error.toException());
-            }
-        });
+    public void toCreateTask(){
+        Intent intent = new Intent (requireContext(), CreateTaskActivity.class);
+        startActivity(intent);
     }
-    private void init(View view){
-        // In a Fragment, you must call findViewById on the root View object ('view')
+
+    public void init(View view) {
         txvMakanan = view.findViewById(R.id.txvMakanan);
         txvStatusMakan = view.findViewById(R.id.txvStatusMakan);
         txvMinuman = view.findViewById(R.id.txvMinuman);
@@ -122,36 +83,127 @@ public class HomeFragment extends Fragment {
         txvBattery = view.findViewById(R.id.txvBattery);
         txvUsername = view.findViewById(R.id.txvUsername);
         btnFeedNow = view.findViewById(R.id.btnFeedNow);
+        btnDone = view.findViewById(R.id.btnDone);
+        btnToCreate = view.findViewById(R.id.btnToCreate);
         lsvTask = view.findViewById(R.id.lsvTask);
     }
 
-    public void readData() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseAuth auth = FirebaseAuth.getInstance();
+    public void setupFirestore() {
+        db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
+        taskList = new ArrayList<>();
+        adapter = new TaskAdapter(taskList);
 
-        if (auth.getCurrentUser() != null) {
-            String userId = auth.getCurrentUser().getUid();
+        lsvTask.setLayoutManager(new LinearLayoutManager(requireContext()));
+        lsvTask.setAdapter(adapter);
+    }
 
-            db.collection("Users").document(userId)
-                    .get()
-                    .addOnSuccessListener(document -> {
-                        if (document.exists()) {
-                            String username = document.getString("Username");
-                            txvUsername.setText("Hi, " + username);
-                            Log.d("Firestore", "User found: " + username);
-                        } else {
-                            txvUsername.setText("Hi, User");
-                            Log.d("Firestore", "No such document");
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        txvUsername.setText("Hi, User");
-                        Log.w("Firestore", "Error getting user data", e);
+    public void loadTasks() {
+        if (auth.getCurrentUser() == null) {
+            Log.d(TAG, "User belum login");
+            return;
+        }
+
+        String userId = auth.getCurrentUser().getUid();
+
+        db.collection("Task")
+                .whereEqualTo("Id_User", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+
+                    taskList.clear();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Task task = doc.toObject(Task.class);
+                        taskList.add(task);
+                    }
+
+                    Collections.sort(taskList, (t1, t2) -> {
+                        return getPriorityValue(t1.getPriority()) - getPriorityValue(t2.getPriority());
                     });
-        } else {
-            txvUsername.setText("Hi, Guest");
-            Log.d("Firestore", "User not logged in");
+
+                    adapter.notifyDataSetChanged();
+                    Log.d(TAG, "Task loaded: " + taskList.size());
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Gagal load task: ", e));
+    }
+
+    public int getPriorityValue(String priority) {
+        switch (priority) {
+            case "High":
+                return 1;
+            case "Medium":
+                return 2;
+            case "Low":
+                return 3;
+            default:
+                return 99;
         }
     }
+
+
+
+    public void setupServoControl() {
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("pawfeeder");
+
+        btnFeedNow.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    FirebaseDatabase.getInstance()
+                            .getReference("pawfeeder/makan/servo")
+                            .setValue(true);
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    FirebaseDatabase.getInstance()
+                            .getReference("pawfeeder/makan/servo")
+                            .setValue(false);
+                    return true;
+            }
+            return false;
+        });
+
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Integer stokMakanan = snapshot.child("makan/stok_makanan").getValue(Integer.class);
+                    Integer stokMinuman = snapshot.child("minum/stok_minuman").getValue(Integer.class);
+                    Long battery = snapshot.child("baterai/persentase").getValue(Long.class);
+
+                    txvMakanan.setText(stokMakanan != null ? stokMakanan + "% left" : "N/A");
+                    txvMinuman.setText(stokMinuman != null ? stokMinuman + "% left" : "N/A");
+                    txvBattery.setText(battery != null ? battery + "%" : "0%");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w(TAG, "Failed to read value.", error.toException());
+            }
+        });
+    }
+
+
+    public void readData() {
+        if (auth.getCurrentUser() == null) {
+            txvUsername.setText("Hi, Guest");
+            return;
+        }
+
+        String userId = auth.getCurrentUser().getUid();
+
+        db.collection("Users").document(userId)
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        String username = document.getString("Username");
+                        txvUsername.setText("Hi, " + username);
+                    } else {
+                        txvUsername.setText("Hi, User");
+                    }
+                })
+                .addOnFailureListener(e -> txvUsername.setText("Hi, User"));
+    }
+
 
 }
