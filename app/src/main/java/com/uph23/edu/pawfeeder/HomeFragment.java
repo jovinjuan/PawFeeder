@@ -114,6 +114,7 @@ public class HomeFragment extends Fragment {
                     taskList.clear();
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         Task task = doc.toObject(Task.class);
+                        task.setDocId(doc.getId());
                         taskList.add(task);
                     }
 

@@ -12,11 +12,16 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.uph23.edu.pawfeeder.R;
 import com.uph23.edu.pawfeeder.model.Task;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
@@ -59,9 +64,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         holder.btnDone.setBackgroundColor(color);
 
-//        holder.btnDone.setOnClickListener(v -> {
-//            deleteTask(task);
-//        });
+        holder.btnDone.setOnClickListener(v -> {
+            deleteTask(task, holder.getAdapterPosition());
+        });
+
     }
 
 
@@ -82,22 +88,63 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
     }
 
-//    private void deleteTask(Task task) {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        FirebaseAuth auth = FirebaseAuth.getInstance();
-//        String userId = auth.getCurrentUser().getUid();
-//
-//        // 1) Hapus task
-//        db.collection("Task")
-//                .document(task.getId_User())   // pastikan Task punya field documentId!
-//                .delete()
-//                .addOnSuccessListener(a -> {
-//                    // Tambah EXP
-//                    addExp(userId, task.getPriority());
-//                })
-//                .addOnFailureListener(e ->
-//                        Log.e("TaskAdapter", "Gagal delete task", e));
-//    }
+    public void deleteTask(Task task, int position) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String userId = auth.getCurrentUser().getUid();
+
+        // HAPUS TASK
+        db.collection("Task")
+                .document(task.getDocId())
+                .delete()
+                .addOnSuccessListener(unused -> {
+
+                    // Setelah delete → Tambah EXP
+                    addExp(userId, task.getPriority());
+
+                    // Hapus dari list local
+                    taskList.remove(position);
+                    notifyItemRemoved(position);
+
+                })
+                .addOnFailureListener(e ->
+                        Log.e("TaskAdapter", "Gagal delete task", e)
+                );
+    }
+
+    private void addExp(String userId, String priority) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference expRef = db.collection("Exp").document(userId);
+
+        db.runTransaction(transaction -> {
+            DocumentSnapshot snapshot = transaction.get(expRef);
+
+            long currentExp = 0L;
+            if (snapshot.exists() && snapshot.contains("Jumlah_Exp")) {
+                Long cur = snapshot.getLong("Jumlah_Exp");
+                if (cur != null) currentExp = cur;
+            }
+
+            int expGain;
+            switch (priority) {
+                case "High": expGain = 30; break;
+                case "Medium": expGain = 20; break;
+                default: expGain = 10; break;
+            }
+
+            long newExp = currentExp + expGain;
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("Jumlah_Exp", newExp);
+
+            transaction.set(expRef, data, SetOptions.merge());
+            return null;
+        }).addOnSuccessListener(unused ->
+                Log.d("EXP", "EXP updated for user " + userId)
+        ).addOnFailureListener(e ->
+                Log.e("EXP", "Failed to update exp", e)
+        );
+    }
 
 
 }
