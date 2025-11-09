@@ -15,12 +15,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.uph23.edu.pawfeeder.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding binding;
+    private BottomNavigationView bottomNav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+        bottomNav = findViewById(R.id.bottom_nav);
         setContentView(binding.getRoot());
         switchFragment(new HomeFragment());
 
@@ -56,5 +59,10 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.frame_layout,fragment);
         fragmentTransaction.commit();
+    }
+    public void setBottomNavVisibility(int visibility){
+        if(bottomNav != null){
+            bottomNav.setVisibility(visibility);
+        }
     }
 }
