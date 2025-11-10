@@ -16,13 +16,21 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ProfileFragment extends Fragment {
@@ -31,6 +39,8 @@ public class ProfileFragment extends Fragment {
     RecyclerView recBadges;
     ProgressBar pro_level,proBadges;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    FirebaseUser user = mAuth.getCurrentUser();
 
     private static final String TAG = "ProfileFragment";
 
@@ -42,6 +52,7 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         loadDataUser();
+        loadDataProgress();
 
         imgLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,6 +69,10 @@ public class ProfileFragment extends Fragment {
         });
 
 
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
 
@@ -99,18 +114,48 @@ public class ProfileFragment extends Fragment {
         proBadges = view.findViewById(R.id.proBadges);
     }
     public void loadDataUser(){
-        db.collection("Users")
-                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        String uid = user.getUid();
+        db.collection("Users").document(uid).get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if(task.isSuccessful()){
-                            for(QueryDocumentSnapshot document : task.getResult()){
+                            DocumentSnapshot document = task.getResult();
+                            if(document.exists()){
                                 txvNama.setText(document.get("Username").toString());
                                 Log.d("users", document.getId() + " => " + document.getData());
                             }
+                        } else {
+                            Log.w("users", "Error getting document.", task.getException());
                         }
-                        else{
-                            Log.w("users", "Error getting documents.", task.getException());
+                    }
+                });
+    }
+    private void loadDataProgress(){
+        String uid = user.getUid();
+        db.collection("Exp").document(uid).get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if(task.isSuccessful()){
+                            DocumentSnapshot document = task.getResult();
+                            if(document.exists()){
+                                String level = document.get("Level").toString();
+                                String expInLevel = document.get("Jumlah_Exp").toString();
+                                String expNext = document.get("ExpNextLevel").toString();
+
+                                txvLevel.setText("Level " + level);
+                                txvCurrentLevel.setText("Level " + level);
+                                txvXp.setText(expInLevel + " Exp");
+                                txvLevelProgress.setText(expInLevel + " / " + expNext + " Xp to Level " + (Integer.parseInt(level) + 1));
+
+                                int progress = (int) ((Double.parseDouble(expInLevel) * 100) / Double.parseDouble(expNext));
+                                pro_level.setProgress(progress);
+
+                                Log.d("progress", document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.w("progress", "Error getting document.", task.getException());
                         }
                     }
                 });

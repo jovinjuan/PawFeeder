@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AccountActivity extends AppCompatActivity {
-    ImageView imgBack, imgProfile, imgCamera, imgEditUsername, imgEditEmail;
+    ImageView imgBack, imgProfile, imgEditUsername, imgEditEmail;
     Button btnSaveAcc, btnChangePass;
     TextView txvUsername, txvEmail;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -94,7 +94,6 @@ public class AccountActivity extends AppCompatActivity {
     private void init() {
         imgBack = findViewById(R.id.imgBack);
         imgProfile = findViewById(R.id.imgProfile);
-        imgCamera = findViewById(R.id.imgCamera);
         imgEditUsername = findViewById(R.id.imgEditUsername);
         imgEditEmail = findViewById(R.id.imgEditEmail);
         btnSaveAcc = findViewById(R.id.btnSaveAcc);

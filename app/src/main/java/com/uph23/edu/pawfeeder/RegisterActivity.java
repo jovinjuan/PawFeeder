@@ -101,6 +101,12 @@ public class RegisterActivity extends AppCompatActivity {
                         user.put("Username", username);
                         user.put("Email", email);
 
+                        Map<String, Object> progress = new HashMap<>();
+                        progress.put("Jumlah_Exp", 0L);
+                        progress.put("Level", 1);
+                        progress.put("ExpInLevel", 0);
+                        progress.put("ExpNextLevel", 100);
+
                         // Simpan ke Firestore dengan UID sebagai document ID
                         db.collection("Users").document(userId)
                                 .set(user)
@@ -108,10 +114,11 @@ public class RegisterActivity extends AppCompatActivity {
                                         Log.d("Register", "User added to Firestore: " + userId))
                                 .addOnFailureListener(e ->
                                         Log.w("Register", "Error adding user to Firestore", e));
-
-                        // Pindah ke login setelah register
-                        toLogin();
-
+                        db.collection("Exp")
+                                .document(userId)
+                                        .set(progress).addOnSuccessListener(aVoid ->{
+                                    Toast.makeText(this, "Register success", Toast.LENGTH_SHORT).show();
+                                    toLogin();});
                     } else {
                         Log.w("Register", "createUserWithEmail:failure", task.getException());
                     }

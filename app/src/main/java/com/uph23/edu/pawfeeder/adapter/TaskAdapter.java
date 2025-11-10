@@ -120,9 +120,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             DocumentSnapshot snapshot = transaction.get(expRef);
 
             long currentExp = 0L;
+            long level = 1L;
+            long nextLevel = 100L;
             if (snapshot.exists() && snapshot.contains("Jumlah_Exp")) {
                 Long cur = snapshot.getLong("Jumlah_Exp");
                 if (cur != null) currentExp = cur;
+            }
+            if(snapshot.exists() && snapshot.contains("Level")){
+                Long lvl = snapshot.getLong("Level");
+                if(lvl != null) level = lvl;
+            }
+            if(snapshot.exists() && snapshot.contains("ExpNextLevel")){
+                Long nxt = snapshot.getLong("ExpNextLevel");
+                if(nxt != null) nextLevel = nxt;
             }
 
             int expGain;
@@ -133,9 +143,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
 
             long newExp = currentExp + expGain;
+            while(newExp > nextLevel){
+                newExp -= nextLevel;
+                level++;
+                nextLevel = 100 * level;
+            }
 
             Map<String, Object> data = new HashMap<>();
             data.put("Jumlah_Exp", newExp);
+            data.put("Level",level);
+            data.put("ExpNextLevel",nextLevel);
 
             transaction.set(expRef, data, SetOptions.merge());
             return null;
@@ -145,6 +162,4 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 Log.e("EXP", "Failed to update exp", e)
         );
     }
-
-
 }

@@ -19,6 +19,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -26,6 +28,7 @@ public class LoginActivity extends AppCompatActivity {
     TextView txtRegister;
     Button btnSubmit;
     private FirebaseAuth mAuth;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,14 +87,8 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 });
     }
-
     public void toMain(){
         Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-    }
-
-    public void toHomePage(){
-        Intent intent = new Intent(this, HomeFragment.class);
         startActivity(intent);
     }
 }
