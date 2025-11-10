@@ -104,7 +104,6 @@ public class RegisterActivity extends AppCompatActivity {
                         Map<String, Object> progress = new HashMap<>();
                         progress.put("Jumlah_Exp", 0L);
                         progress.put("Level", 1);
-                        progress.put("ExpInLevel", 0);
                         progress.put("ExpNextLevel", 100);
 
                         // Simpan ke Firestore dengan UID sebagai document ID
