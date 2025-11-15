@@ -15,4 +15,6 @@
     <color name="red_priority">#FF6B6B</color>
     <color name="orange_priority">#FFA654</color>
     <color name="green_priority">#4CAF50</color>
+    <color name="switch_on">#4CAF50</color>
+    <color name="switch_off">#FFC0C0C0</color>
 </resources>

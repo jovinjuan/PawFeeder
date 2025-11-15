@@ -105,6 +105,7 @@ public class RegisterActivity extends AppCompatActivity {
                         progress.put("Jumlah_Exp", 0L);
                         progress.put("Level", 1);
                         progress.put("ExpNextLevel", 100);
+                        progress.put("Title","Paw Novice");
 
                         // Simpan ke Firestore dengan UID sebagai document ID
                         db.collection("Users").document(userId)

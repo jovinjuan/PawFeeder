@@ -122,6 +122,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             long currentExp = 0L;
             long level = 1L;
             long nextLevel = 100L;
+            String title = "Paw Novice";
             if (snapshot.exists() && snapshot.contains("Jumlah_Exp")) {
                 Long cur = snapshot.getLong("Jumlah_Exp");
                 if (cur != null) currentExp = cur;
@@ -134,6 +135,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 Long nxt = snapshot.getLong("ExpNextLevel");
                 if(nxt != null) nextLevel = nxt;
             }
+            if(snapshot.exists() && snapshot.contains("Title")){
+                String ttl = snapshot.getString("Title");
+                if(ttl != null) title = ttl;
+            }
+
 
             int expGain;
             switch (priority) {
@@ -149,10 +155,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 nextLevel = 100 * level;
             }
 
+            if(level <= 5){
+                title = "Paw Novice";
+            } else if (level <= 10) {
+                title = "Paw Feeder";
+            } else if (level <= 20) {
+                title = "Paw Master";
+            }
+            else{
+                title = "Paw Legend";
+            }
+
             Map<String, Object> data = new HashMap<>();
             data.put("Jumlah_Exp", newExp);
             data.put("Level",level);
             data.put("ExpNextLevel",nextLevel);
+            data.put("Title", title);
 
             transaction.set(expRef, data, SetOptions.merge());
             return null;

@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,10 +35,11 @@ import java.util.Map;
 
 
 public class ProfileFragment extends Fragment {
-    ImageView imgProfile, imgAccount, imgNotif, imgDevice, imgLogout;
+    ImageView imgProfile, imgAccount, imgLogout;
     TextView txvNama, txvTitle, txvLevel, txvCurrentLevel, txvXp, txvLevelProgress, txvViewAll, txvNoBadges,txvBadgesName, txvBadgesProgress;
     RecyclerView recBadges;
     ProgressBar pro_level,proBadges;
+    SwitchCompat switchNotif;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
     FirebaseUser user = mAuth.getCurrentUser();
@@ -96,8 +98,7 @@ public class ProfileFragment extends Fragment {
     private void init(View view){
         imgProfile = view.findViewById(R.id.imgProfile);
         imgAccount = view.findViewById(R.id.imgAccount);
-        imgNotif = view.findViewById(R.id.imgNotif);
-        imgDevice = view.findViewById(R.id.imgDevice);
+        switchNotif = view.findViewById(R.id.switchNotif);
         imgLogout = view.findViewById(R.id.imgLogout);
         txvNama = view.findViewById(R.id.txvNama);
         txvTitle = view.findViewById(R.id.txvTitle);
@@ -143,10 +144,12 @@ public class ProfileFragment extends Fragment {
                                 String level = document.get("Level").toString();
                                 String expInLevel = document.get("Jumlah_Exp").toString();
                                 String expNext = document.get("ExpNextLevel").toString();
+                                String title = document.get("Title").toString();
 
                                 txvLevel.setText("Level " + level);
                                 txvCurrentLevel.setText("Level " + level);
                                 txvXp.setText(expInLevel + " Exp");
+                                txvTitle.setText(title);
                                 txvLevelProgress.setText(expInLevel + " / " + expNext + " Xp to Level " + (Integer.parseInt(level) + 1));
 
                                 int progress = (int) ((Double.parseDouble(expInLevel) * 100) / Double.parseDouble(expNext));

@@ -36,7 +36,7 @@
             app:cardCornerRadius="14dp"
             app:cardElevation="0dp"
             android:layout_marginBottom="12dp"
-            android:useCompatPadding="true"
+            app:useCompatPadding="true"
             android:backgroundTint="@android:color/transparent">
 
             <LinearLayout
@@ -107,11 +107,11 @@
                             <ImageView
                                 android:id="@+id/ivDaysIcon"
                                 android:layout_width="80dp"
-                                android:layout_height="80dp"
-                                android:src="@drawable/ic_fire"
-                                android:scaleType="fitCenter"
+                                android:layout_height="100dp"
                                 android:contentDescription="iconDays"
-                                android:padding="6dp"/>
+                                android:padding="6dp"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/ic_fire" />
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
@@ -407,7 +407,7 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="2dp"
-                app:layout_columnWeight="1">
+                android:layout_columnWeight="1">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -450,7 +450,7 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="2dp"
-                app:layout_columnWeight="1">
+                android:layout_columnWeight="1">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -493,7 +493,7 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="2dp"
-                app:layout_columnWeight="1">
+                android:layout_columnWeight="1">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -536,7 +536,7 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="2dp"
-                app:layout_columnWeight="1">
+                android:layout_columnWeight="1">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -579,7 +579,7 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="2dp"
-                app:layout_columnWeight="1">
+                android:layout_columnWeight="1">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -622,7 +622,7 @@
                 android:layout_margin="6dp"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="2dp"
-                app:layout_columnWeight="1">
+                android:layout_columnWeight="1">
 
                 <FrameLayout
                     android:layout_width="match_parent"
