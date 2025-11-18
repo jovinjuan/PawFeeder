@@ -80,7 +80,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Username"
-                    app:startIconDrawable="@drawable/users"
+                    app:startIconDrawable="@drawable/small_users"
                     app:startIconTint="@color/iconblue"
                     app:startIconCheckable="false"
                     app:boxStrokeWidth="0dp"
