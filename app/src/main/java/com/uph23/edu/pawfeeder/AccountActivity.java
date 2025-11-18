@@ -28,6 +28,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -103,21 +104,16 @@ public class AccountActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        db.collection("Users")
+        String uid = mAuth.getCurrentUser().getUid();
+        db.collection("Users").document(uid)
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                txvUsername.setText(document.get("Username").toString());
-                                txvEmail.setText(document.get("Email").toString());
-                            }
-                        } else {
-                            Log.w("USER", "Error getting documents.", task.getException());
-                        }
-                    }
+                .addOnSuccessListener(documentSnapshot -> {
+                   if(documentSnapshot.exists()){
+                       txvUsername.setText(documentSnapshot.getString("Username"));
+                       txvEmail.setText(documentSnapshot.getString("Email"));
+                   }
                 });
+
     }
 
     private void edit(String title, String currentValue, String fieldKey, TextView txvTarget) {

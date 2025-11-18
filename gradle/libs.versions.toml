@@ -26,6 +26,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version = "v3.1.0"}
 cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 
 [plugins]
