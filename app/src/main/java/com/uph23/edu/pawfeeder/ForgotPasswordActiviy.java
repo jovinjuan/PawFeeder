@@ -79,6 +79,7 @@ public class ForgotPasswordActiviy extends AppCompatActivity {
 
                     } else {
                         edtEmail.setError("Email tidak terdaftar!");
+                        edtEmail.setText("");
                     }
                 });
     }

@@ -91,6 +91,13 @@ public class LoginActivity extends AppCompatActivity {
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("L", "Login:failure", task.getException());
+                            // SET ERROR
+                            edtEmail.setError("Invalid credential");
+                            edtPassword.setError("Invalid credential");
+
+                            // CLEAR TEXT
+                            edtEmail.setText("");
+                            edtPassword.setText("");
                         }
                     }
                 });

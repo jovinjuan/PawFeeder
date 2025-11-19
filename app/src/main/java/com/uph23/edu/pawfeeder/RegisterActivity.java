@@ -22,6 +22,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -78,6 +79,7 @@ public class RegisterActivity extends AppCompatActivity {
         edtConfirmPassword = findViewById(R.id.edtConfirmPassword);
         txtSignIn = findViewById(R.id.txtSignIn);
         btnSubmit = findViewById(R.id.btnSubmit);
+        mAuth = FirebaseAuth.getInstance();
     }
 
     private void toLogin() {
@@ -85,7 +87,33 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void register(String username, String email, String password) {
-        mAuth = FirebaseAuth.getInstance();
+
+        // Validasi Username
+        if (username.isEmpty()) {
+            edtUsername.setError("Username cannot be empty");
+            return;
+        }
+
+        // Validasi Email
+        if (email.isEmpty()) {
+            edtEmail.setError("Email cannot be empty");
+            return;
+        }
+
+        // Validasi Password kosong
+        if (password.isEmpty()) {
+            edtPassword.setError("Password cannot be empty");
+            return;
+        }
+
+        // Validasi minimal 6 digit
+        if (password.length() < 6) {
+            edtPassword.setError("Password must be at least 6 characters");
+            edtPassword.setText("");
+            edtConfirmPassword.setText("");
+            return;
+        }
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         mAuth.createUserWithEmailAndPassword(email, password)
@@ -121,6 +149,18 @@ public class RegisterActivity extends AppCompatActivity {
                                     toLogin();});
                     } else {
                         Log.w("Register", "createUserWithEmail:failure", task.getException());
+
+                        Exception e = task.getException();
+
+                        if (e instanceof FirebaseAuthUserCollisionException) {
+                            edtEmail.setError("Email already registered");
+                            edtUsername.setText("");
+                            edtEmail.setText("");
+                            edtPassword.setText("");
+                            edtConfirmPassword.setText("");
+                        } else {
+                            edtEmail.setError("Registration failed");
+                        }
                     }
                 });
     }
