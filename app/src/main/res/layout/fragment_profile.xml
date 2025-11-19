@@ -17,10 +17,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:paddingTop="45dp"
+            android:paddingBottom="15dp"
             android:paddingLeft="15dp"
-            android:paddingTop="15dp"
-            android:paddingRight="15dp"
-            android:paddingBottom="15dp">
+            android:paddingRight="15dp">
 
 
             <LinearLayout
@@ -293,6 +293,7 @@
                         android:orientation="vertical">
 
                         <LinearLayout
+                            android:id="@+id/btnAccount"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="horizontal"
@@ -332,7 +333,6 @@
                                 android:layout_gravity="end">
 
                                 <ImageView
-                                    android:id="@+id/imgAccount"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:paddingTop="8dp"
@@ -401,6 +401,7 @@
                             android:layout_height="1dp"
                             android:background="@android:color/darker_gray" />
                         <LinearLayout
+                            android:id="@+id/btnLogout"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="horizontal"
@@ -437,7 +438,6 @@
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical">
                                 <ImageView
-                                    android:id="@+id/imgLogout"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:src="@drawable/direct_logout"

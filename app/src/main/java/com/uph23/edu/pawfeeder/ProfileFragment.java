@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +36,8 @@ import java.util.Map;
 
 
 public class ProfileFragment extends Fragment {
-    ImageView imgProfile, imgAccount, imgLogout;
+    ImageView imgProfile;
+    LinearLayout btnAccount, btnLogout;
     TextView txvNama, txvTitle, txvLevel, txvCurrentLevel, txvXp, txvLevelProgress, txvViewAll, txvNoBadges,txvBadgesName, txvBadgesProgress;
     RecyclerView recBadges;
     ProgressBar pro_level,proBadges;
@@ -56,14 +58,14 @@ public class ProfileFragment extends Fragment {
         loadDataUser();
         loadDataProgress();
 
-        imgLogout.setOnClickListener(new View.OnClickListener() {
+        btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 FirebaseAuth.getInstance().signOut();
                 toLogin();
             }
         });
-        imgAccount.setOnClickListener(new View.OnClickListener() {
+        btnAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 toAccount();
@@ -97,9 +99,9 @@ public class ProfileFragment extends Fragment {
     }
     private void init(View view){
         imgProfile = view.findViewById(R.id.imgProfile);
-        imgAccount = view.findViewById(R.id.imgAccount);
+        btnAccount = view.findViewById(R.id.btnAccount);
         switchNotif = view.findViewById(R.id.switchNotif);
-        imgLogout = view.findViewById(R.id.imgLogout);
+        btnLogout = view.findViewById(R.id.btnLogout);
         txvNama = view.findViewById(R.id.txvNama);
         txvTitle = view.findViewById(R.id.txvTitle);
         txvLevel = view.findViewById(R.id.txvLevel);

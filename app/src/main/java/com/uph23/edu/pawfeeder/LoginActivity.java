@@ -25,7 +25,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class LoginActivity extends AppCompatActivity {
 
     EditText edtEmail, edtPassword;
-    TextView txtRegister;
+    TextView txtRegister, txvForgotPassword;
     Button btnSubmit;
     private FirebaseAuth mAuth;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -49,6 +49,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        txvForgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toForgotPassword();
+            }
+        });
+
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,6 +70,7 @@ public class LoginActivity extends AppCompatActivity {
         edtPassword = findViewById(R.id.edtPassword);
         txtRegister = findViewById(R.id.txtRegister);
         btnSubmit = findViewById(R.id.btnSubmit);
+        txvForgotPassword = findViewById(R.id.txvForgotPassword);
     }
 
     public void toRegister(){
@@ -89,6 +97,11 @@ public class LoginActivity extends AppCompatActivity {
     }
     public void toMain(){
         Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+
+    public void toForgotPassword(){
+        Intent intent = new Intent(this, ForgotPasswordActiviy.class);
         startActivity(intent);
     }
 }

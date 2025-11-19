@@ -73,7 +73,7 @@
                         android:layout_marginTop="20dp"/>
 
                     <TextView
-                        android:id="@+id/txvResetEmail"
+                        android:id="@+id/txvEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="abangganteng@gmail.com"
@@ -119,7 +119,7 @@
                     </LinearLayout>
 
                     <TextView
-                        android:id="@+id/txtRegister"
+                        android:id="@+id/txvBackToLogin"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text=" Back To Login"
