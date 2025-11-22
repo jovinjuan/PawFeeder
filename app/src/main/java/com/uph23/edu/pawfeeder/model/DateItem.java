@@ -1,5 +1,7 @@
 package com.uph23.edu.pawfeeder.model;
 
+import java.util.Date;
+
 public class DateItem {
     private int date;
     private String dayName;
@@ -7,7 +9,7 @@ public class DateItem {
     private boolean isSelected;
     private DateItem fullDate;
 
-    public DateItem(int date, String dayName, String month, boolean isSelected, DateItem fullDate){
+    public DateItem(int date, String dayName, String month, boolean isSelected, Date fullDate){
         this.date = date;
         this.dayName = dayName;
         this.month = month;
