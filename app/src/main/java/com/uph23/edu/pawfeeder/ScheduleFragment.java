@@ -19,6 +19,7 @@ import com.uph23.edu.pawfeeder.model.DateItem;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -126,13 +127,13 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
 
             boolean isToday = isToday(calendar);
 
-            DateItem dateItem = new DateItem(
+            Date dateItem = new DateItem(
                     i,
                     dayFormat.format(calendar.getTime()).toUpperCase(),
                     monthFormat.format(calendar.getTime()).toUpperCase(),
                     isToday,
                     calendar.getTime()
-            );
+            )
 
             dateList.add(dateItem);
         }

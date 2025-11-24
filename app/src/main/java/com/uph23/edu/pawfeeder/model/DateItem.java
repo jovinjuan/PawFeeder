@@ -7,7 +7,7 @@ public class DateItem {
     private String dayName;
     private String month;
     private boolean isSelected;
-    private DateItem fullDate;
+    private Date fullDate;
 
     public DateItem(int date, String dayName, String month, boolean isSelected, Date fullDate){
         this.date = date;
@@ -30,6 +30,6 @@ public class DateItem {
     public boolean isSelected() {return isSelected;}
     public void setSelected(boolean isSelected) {this.isSelected = isSelected;}
 
-    public DateItem getFullDate() {return fullDate;}
-    public void setFullDate(DateItem fullDate) {this.fullDate = fullDate;}
+    public Date getFullDate() {return fullDate;}
+    public void setFullDate(Date fullDate) {this.fullDate = fullDate;}
 }

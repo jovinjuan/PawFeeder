@@ -40,12 +40,6 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.DateViewHolder
         return new DateViewHolder(view);
     }
 
-    @NonNull
-    @Override
-    public DateViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return null;
-    }
-
     @Override
     public void onBindViewHolder(@NonNull DateViewHolder holder, int position) {
         DateItem dateItem = dates.get(position);
@@ -66,7 +60,7 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.DateViewHolder
             tvDayName = itemView.findViewById(R.id.tvDayName);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvMonth = itemView.findViewById(R.id.tvMonth);
-            cardView = itemView.findViewById(R.id.cardView);
+            cardView = itemView.findViewById(R.id.cvDate);
         }
 
         public void bind(DateItem dateItem, int position) {
