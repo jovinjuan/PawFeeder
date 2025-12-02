@@ -15,10 +15,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -27,7 +25,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.uph23.edu.pawfeeder.adapter.TaskAdapter;
 import com.uph23.edu.pawfeeder.model.Task;
 
@@ -82,7 +79,7 @@ public class HomeFragment extends Fragment {
         txvStatusMinum = view.findViewById(R.id.txvStatusMinum);
         txvBattery = view.findViewById(R.id.txvBattery);
         txvUsername = view.findViewById(R.id.txvUsername);
-        btnFeedNow = view.findViewById(R.id.btnFeedNow);
+        btnFeedNow = view.findViewById(R.id.btnFeed);
         btnDone = view.findViewById(R.id.btnDone);
         btnToCreate = view.findViewById(R.id.btnToCreate);
         lsvTask = view.findViewById(R.id.lsvTask);

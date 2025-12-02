@@ -39,16 +39,10 @@
 
                 <TextView
                     android:id="@+id/txvDates"
-                    android:layout_width="350dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="November,2025"
                     android:textSize="24dp" />
-
-                <ImageView
-                    android:id="@+id/imgCalendar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/calendar" />
 
             </LinearLayout>
 
@@ -94,7 +88,7 @@
                         <TextView
                             android:id="@+id/txvAddSchedule"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:gravity="end"
                             android:paddingTop="25dp"
                             android:text="Add Schedule"
@@ -105,13 +99,15 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:layout_marginTop="10dp">
+                        android:layout_marginTop="15dp"
+                        android:orientation="vertical">
 
-                        <ListView
-                            android:id="@+id/lsvSchedule"
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvfeedingSchedule"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent" />
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false" />
+
                     </LinearLayout>
 
                 </LinearLayout>
