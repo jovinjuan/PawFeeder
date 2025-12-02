@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
@@ -181,47 +182,68 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
         Intent intent = new Intent(requireContext(),CreateScheduleActivity.class);
         startActivity(intent);
     }
-    private void loadSchedulesData(){
+    private void loadSchedulesData() {
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 
         String userId = mAuth.getCurrentUser().getUid();
 
-
+        // 1. Definisikan Query
         db.collection("Schedule")
                 .whereEqualTo("Id_User", userId)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
+                .addSnapshotListener((snapshot, e) -> { // Menggunakan addSnapshotListener
 
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        Schedule s = doc.toObject(Schedule.class);
-                        s.setId(doc.getId());
-                        String feedDate = s.getFeedDate();
-                        scheduleList.add(s);
+                    // 2. Cek Error
+                    if (e != null) {
+                        Log.e("ScheduleFragment", "Listen failed: " + e.getMessage(), e);
+                        return;
+                    }
 
-                        if (feedDate != null && !datesWithSchedule.contains(feedDate)) {
-                            datesWithSchedule.add(feedDate);
+                    // 3. Cek Snapshot
+                    if (snapshot != null) {
+                        // 4. Hapus data lama sebelum memproses data baru
+                        scheduleList.clear();
+                        datesWithSchedule.clear();
+
+                        // 5. Iterasi melalui dokumen di snapshot (menggantikan querySnapshot)
+                        for (QueryDocumentSnapshot doc : snapshot) {
+                            Schedule s = doc.toObject(Schedule.class);
+                            s.setId(doc.getId()); // Set Document ID
+                            String feedDate = s.getFeedDate();
+                            scheduleList.add(s);
+
+                            if (feedDate != null && !datesWithSchedule.contains(feedDate)) {
+                                datesWithSchedule.add(feedDate);
+                            }
                         }
-                    }
-                    // BARU BUAT ADAPTER SETELAH DATA SUDAH ADA!
-                    if (feedAdapter == null) {
-                        List<Schedule> initialList = new ArrayList<>();
-                        feedAdapter = new ScheduleAdapter(initialList, ScheduleFragment.this);
-                        rvFeedSchedule.setAdapter(feedAdapter);
-                    } else {
-                        feedAdapter.notifyDataSetChanged();
-                    }
-                    scheduleList.sort((a, b) -> {
-                        String timeA = a.getFeedTime() != null ? a.getFeedTime() : "";
-                        String timeB = b.getFeedTime() != null ? b.getFeedTime() : "";
-                        return timeA.compareTo(timeB);
-                    });
-                    dateAdapter.updateDatesWithSchedule(datesWithSchedule);
-                    showFeedingSchedule(selectedDate);
 
-                    Log.d(TAG, "Task loaded: " + scheduleList.size());
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Gagal load task: ", e));
+                        // 6. Sorting data
+                        scheduleList.sort((a, b) -> {
+                            String timeA = a.getFeedTime() != null ? a.getFeedTime() : "";
+                            String timeB = b.getFeedTime() != null ? b.getFeedTime() : "";
+                            return timeA.compareTo(timeB);
+                        });
+
+                        // 7. Update Adapter (Logika sama)
+                        if (feedAdapter == null) {
+                            // Jika adapter belum dibuat, buat adapter baru dengan list yang sudah terisi
+                            feedAdapter = new ScheduleAdapter(scheduleList, ScheduleFragment.this);
+                            rvFeedSchedule.setAdapter(feedAdapter);
+                        } else {
+                            // Jika adapter sudah ada, beri tahu bahwa data telah berubah
+                            feedAdapter.notifyDataSetChanged();
+                        }
+
+                        // 8. Update UI lainnya
+                        dateAdapter.updateDatesWithSchedule(datesWithSchedule);
+                        // Pastikan selectedDate sudah didefinisikan di Fragment Anda
+                        // Menggunakan view yang ada karena ada perubahan data
+                        showFeedingSchedule(selectedDate);
+
+                        Log.d("ScheduleFragment", "Schedules loaded: " + scheduleList.size());
+                    }
+                });
+        // Hapus addOnFailureListener karena sudah ditangani di dalam listener
     }
     private void scrollCalendarToToday() {
         for (int i = 0; i < dateAdapter.getItemCount(); i++) {
@@ -294,7 +316,15 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
 
     @Override
     public void onDelete(Schedule schedule) {
-
+        db = FirebaseFirestore.getInstance();
+        db.collection("Schedule").document(schedule.getId())
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Jadwal berhasil dihapus: " + schedule.getId());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Gagal menghapus jadwal: " + schedule.getId(), e);
+                });
     }
 
     @Override
