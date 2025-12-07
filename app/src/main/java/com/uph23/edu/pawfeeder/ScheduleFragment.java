@@ -230,6 +230,21 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
         db.collection("Schedule").document(schedule.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
+                    // 2. Hapus data yang sesuai dari Realtime Database
+                    DatabaseReference myRef = FirebaseDatabase.getInstance()
+                            .getReference("pawfeeder/autofeed");
+
+                    // Gunakan scheduleId sebagai key (child) dan panggil removeValue()
+                    myRef.child(schedule.getId()).removeValue()
+                            .addOnSuccessListener(a -> {
+                                Log.d(TAG, "Jadwal berhasil dihapus dari Realtime DB: " + schedule.getId());
+                                // Opsional: Berikan feedback ke pengguna (misalnya Toast)
+                                // Toast.makeText(context, "Jadwal berhasil dihapus!", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(eRealtime -> {
+                                Log.e(TAG, "Gagal menghapus jadwal dari Realtime DB: " + schedule.getId(), eRealtime);
+                                // Berikan feedback bahwa ada masalah, meskipun di Firestore berhasil
+                            });
                     Log.d(TAG, "Jadwal berhasil dihapus: " + schedule.getId());
                 })
                 .addOnFailureListener(e -> {

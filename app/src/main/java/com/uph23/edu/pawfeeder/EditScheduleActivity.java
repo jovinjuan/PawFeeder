@@ -146,6 +146,21 @@ public class EditScheduleActivity extends AppCompatActivity {
                 .document(scheduleId)
                 .set(updateData)
                 .addOnSuccessListener(aVoid -> {
+                    DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("pawfeeder/autofeed");
+
+                    Map<String, Object> autoData = new HashMap<>();
+                    autoData.put("feed_date", feeddate);
+                    autoData.put("feed_time", feedtime);
+
+                    myRef.child(scheduleId).setValue(autoData)
+                            .addOnSuccessListener(a -> {
+                                Toast.makeText(this, "Data updated successfully!", Toast.LENGTH_SHORT).show();
+                                finish();
+                            })
+                            .addOnFailureListener(eRealtime -> {
+                                Toast.makeText(this, "Data updated in Firestore, but Realtime DB failed: " + eRealtime.getMessage(), Toast.LENGTH_LONG).show();
+                                finish();
+                            });
                     Toast.makeText(this, "Data updated successfully !", Toast.LENGTH_SHORT).show();
                     finish();
                 })
