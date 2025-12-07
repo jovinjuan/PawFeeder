@@ -20,6 +20,8 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
@@ -33,7 +35,7 @@ public class CreateScheduleActivity extends AppCompatActivity {
     ImageView imgBack;
     TextInputLayout feedingTime,feedDate;
     TextInputEditText edtScheduleName, edtPortionSize, edtFeedingTime,edtFeedDate;
-    SwitchCompat switchWeekly,switchNotif;
+    SwitchCompat switchNotif;
     Button btnSubmit;
     private String selectedTime = "08:00";
     private String selectedSpecificDate = "";
@@ -69,10 +71,9 @@ public class CreateScheduleActivity extends AppCompatActivity {
                 String portion = edtPortionSize.getText().toString().trim();
                 String feedtime = edtFeedingTime.getText().toString().trim();
                 String feeddate = edtFeedDate.getText().toString().trim();
-                boolean repeatweekly = switchWeekly.isChecked();
                 boolean notification = switchNotif.isChecked();
 
-                createSchedule(schedulename,portion,feedtime,feeddate,repeatweekly,notification);
+                createSchedule(schedulename,portion,feedtime,feeddate,notification);
             }
         });
     }
@@ -84,11 +85,10 @@ public class CreateScheduleActivity extends AppCompatActivity {
         edtFeedDate = findViewById(R.id.edtFeedDate);
         feedingTime = findViewById(R.id.feedingTime);
         feedDate = findViewById(R.id.feedDate);
-        switchWeekly = findViewById(R.id.switchWeekly);
         switchNotif = findViewById(R.id.switchNotif);
         btnSubmit = findViewById(R.id.btnSubmit);
    }
-   private void createSchedule(String schedulename, String portion, String feedtime, String feeddate, boolean repeatweekly, boolean notification){
+   private void createSchedule(String schedulename, String portion, String feedtime, String feeddate, boolean notification){
        db = FirebaseFirestore.getInstance();
        mAuth = FirebaseAuth.getInstance();
        String userId = mAuth.getCurrentUser().getUid();
@@ -119,15 +119,24 @@ public class CreateScheduleActivity extends AppCompatActivity {
        schedule.put("Portion", portion);
        schedule.put("FeedTime", feedtime);
        schedule.put("FeedDate",feeddate);
-       schedule.put("repeat_weekly", repeatweekly);
        schedule.put("notification", notification);
 
        db.collection("Schedule").add(schedule).addOnSuccessListener(documentReference -> {
+           DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("pawfeeder/autofeed");
+           String key = documentReference.getId();
+           Map<String, Object> autoData = new HashMap<>();
+           autoData.put("feed_date", feeddate);
+           autoData.put("feed_time", feedtime);
+           myRef.child(key).setValue(autoData);
+
            Toast.makeText(this, "Feeding Schedule has been set", Toast.LENGTH_SHORT).show();
            finish();
        }).addOnFailureListener(e -> {
            Toast.makeText(this, "Failed to add" + e.getMessage(), Toast.LENGTH_LONG).show();
        });
+
+
+
    }
    private void setFeedTime(){
        Calendar calendar = Calendar.getInstance();

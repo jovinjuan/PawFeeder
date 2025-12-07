@@ -190,12 +190,11 @@
                 app:cardUseCompatPadding="false"
                 app:contentPadding="0dp">
 
-                <ImageView
+                <WebView
+                    android:id="@+id/imgCamera"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:adjustViewBounds="true"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/livecam" />
+                    android:background="#000000"/>
             </androidx.cardview.widget.CardView>
 
             <TextView

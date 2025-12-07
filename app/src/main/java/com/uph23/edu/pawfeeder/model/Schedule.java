@@ -12,7 +12,6 @@ public class Schedule implements Parcelable {
     private String Portion;
     private String FeedTime;
     private String FeedDate;
-    private boolean repeat_weekly;
     private boolean notification;
 
     public Schedule(){
@@ -26,7 +25,6 @@ public class Schedule implements Parcelable {
         Portion = portion;
         FeedTime = feedTime;
         FeedDate = feedDate;
-        this.repeat_weekly = repeat_weekly;
         this.notification = notification;
     }
     protected Schedule(Parcel in) {
@@ -36,7 +34,6 @@ public class Schedule implements Parcelable {
         FeedTime = in.readString();
         Portion = in.readString();
         FeedDate = in.readString();
-        repeat_weekly = in.readByte() != 0;
         notification = in.readByte() != 0;
     }
 
@@ -60,7 +57,6 @@ public class Schedule implements Parcelable {
         dest.writeString(FeedTime);
         dest.writeString(Portion);
         dest.writeString(FeedDate);
-        dest.writeByte((byte) (repeat_weekly ? 1 : 0));
         dest.writeByte((byte) (notification ? 1 : 0));
     }
 
@@ -107,14 +103,6 @@ public class Schedule implements Parcelable {
 
     public void setFeedDate(String feedDate) {
         FeedDate = feedDate;
-    }
-
-    public boolean isRepeat_weekly() {
-        return repeat_weekly;
-    }
-
-    public void setRepeat_weekly(boolean repeat_weekly) {
-        this.repeat_weekly = repeat_weekly;
     }
 
     public boolean isNotification() {

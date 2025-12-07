@@ -98,86 +98,6 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
         rvFeedSchedule.setLayoutManager(new LinearLayoutManager(getContext()));
 
     }
-//    private void buildCalendar() {
-//        dateList.clear();
-//        Calendar todayCal = Calendar.getInstance();
-//        int year = todayCal.get(Calendar.YEAR);
-//        int month = todayCal.get(Calendar.MONTH);
-//        int todayDate = todayCal.get(Calendar.DAY_OF_MONTH);
-//
-//        Calendar cal = Calendar.getInstance();
-//        cal.set(year, month, 1);
-//
-//        int currentMonth = cal.get(Calendar.MONTH);
-//        SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM yyyy", Locale.ENGLISH);
-//        txvDates.setText(monthFormat.format(cal.getTime()));
-//
-//        while (cal.get(Calendar.MONTH) == currentMonth) {
-//            int day = cal.get(Calendar.DAY_OF_MONTH);
-//            String dayName = new SimpleDateFormat("EEE", Locale.ENGLISH).format(cal.getTime());
-//            Date fullDate = cal.getTime();
-//
-//            boolean hasSchedule = false;
-//            for (Schedule s : feedList) {
-//                if (s.getFeedingDate() != null && !s.getFeedingDate().isEmpty()) {
-//                    try{
-//                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-//                    Date feedingDate = sdf.parse(s.getFeedingDate());
-//                    if(feedingDate != null && isSameDate(feedingDate,fullDate)) hasSchedule = true; break;
-//                    }catch (Exception e){}
-//                }
-//            }
-//
-//            boolean isToday = (day == todayDate);
-//            dateList.add(new DateItem(day, dayName, hasSchedule, fullDate));
-//            cal.add(Calendar.DAY_OF_MONTH, 1);
-//        }
-//
-//        if (dateAdapter != null) dateAdapter.notifyDataSetChanged();
-//    }
-//    private void filterFeedSchedule(Date selectedDate){
-//        List<Schedule> todayFeedings = new ArrayList<>();
-//
-//
-//        for (Schedule s : feedList) {
-//            String raw = s.getFeedingDate();
-//            Log.d("DEBUG_TANGGAL", "ID: " + s.getId() + " → feedingDate = '" + raw + "'");
-//            try {
-//                // Mengonversi feedingDate menjadi objek Date
-//                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-//                Date feedingDate = dateFormat.parse(s.getFeedingDate());  // Mengonversi string ke Date
-//
-//                // Memeriksa apakah tanggal feedingDate sama dengan selectedDate
-//                if (feedingDate != null && isSameDate(feedingDate, selectedDate)) {
-//                    todayFeedings.add(s);
-//                }
-//            } catch (ParseException e) {
-//                // Menangani kasus jika parsing gagal
-//                Log.e(TAG, "Parse exception for feedingDate: " + s.getFeedingDate(), e);
-//            }
-//            }
-//
-//
-//        todayFeedings.sort((a, b) -> {
-//            String t1 = a.getFeedingTime() != null ? a.getFeedingTime() : "";
-//            String t2 = b.getFeedingTime() != null ? b.getFeedingTime() : "";
-//            return t1.compareTo(t2);
-//        });
-//
-//        rvFeedSchedule.setAdapter(feedAdapter);
-//
-//    }
-//    private boolean isSameDate(Date date1, Date date2){
-//        Calendar cal1 = Calendar.getInstance();
-//        Calendar cal2 = Calendar.getInstance();
-//
-//        cal1.setTime(date1);
-//        cal2.setTime(date2);
-//
-//        return (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) &&
-//                (cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH)) &&
-//                (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH));
-//    }
     private void toAddSchedule(){
         Intent intent = new Intent(requireContext(),CreateScheduleActivity.class);
         startActivity(intent);
@@ -188,27 +108,24 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
 
         String userId = mAuth.getCurrentUser().getUid();
 
-        // 1. Definisikan Query
         db.collection("Schedule")
                 .whereEqualTo("Id_User", userId)
-                .addSnapshotListener((snapshot, e) -> { // Menggunakan addSnapshotListener
+                .addSnapshotListener((snapshot, e) -> {
 
-                    // 2. Cek Error
+
                     if (e != null) {
                         Log.e("ScheduleFragment", "Listen failed: " + e.getMessage(), e);
                         return;
                     }
 
-                    // 3. Cek Snapshot
+
                     if (snapshot != null) {
-                        // 4. Hapus data lama sebelum memproses data baru
                         scheduleList.clear();
                         datesWithSchedule.clear();
 
-                        // 5. Iterasi melalui dokumen di snapshot (menggantikan querySnapshot)
                         for (QueryDocumentSnapshot doc : snapshot) {
                             Schedule s = doc.toObject(Schedule.class);
-                            s.setId(doc.getId()); // Set Document ID
+                            s.setId(doc.getId());
                             String feedDate = s.getFeedDate();
                             scheduleList.add(s);
 
@@ -217,33 +134,26 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
                             }
                         }
 
-                        // 6. Sorting data
                         scheduleList.sort((a, b) -> {
                             String timeA = a.getFeedTime() != null ? a.getFeedTime() : "";
                             String timeB = b.getFeedTime() != null ? b.getFeedTime() : "";
                             return timeA.compareTo(timeB);
                         });
 
-                        // 7. Update Adapter (Logika sama)
                         if (feedAdapter == null) {
-                            // Jika adapter belum dibuat, buat adapter baru dengan list yang sudah terisi
+
                             feedAdapter = new ScheduleAdapter(scheduleList, ScheduleFragment.this);
                             rvFeedSchedule.setAdapter(feedAdapter);
                         } else {
-                            // Jika adapter sudah ada, beri tahu bahwa data telah berubah
                             feedAdapter.notifyDataSetChanged();
                         }
 
-                        // 8. Update UI lainnya
                         dateAdapter.updateDatesWithSchedule(datesWithSchedule);
-                        // Pastikan selectedDate sudah didefinisikan di Fragment Anda
-                        // Menggunakan view yang ada karena ada perubahan data
                         showFeedingSchedule(selectedDate);
 
                         Log.d("ScheduleFragment", "Schedules loaded: " + scheduleList.size());
                     }
                 });
-        // Hapus addOnFailureListener karena sudah ditangani di dalam listener
     }
     private void scrollCalendarToToday() {
         for (int i = 0; i < dateAdapter.getItemCount(); i++) {
@@ -329,6 +239,9 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
 
     @Override
     public void onNotif(Schedule schedule) {
+
+    }
+    private void autoFeed(){
 
     }
 }

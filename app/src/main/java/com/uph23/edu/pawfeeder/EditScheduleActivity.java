@@ -40,7 +40,7 @@ public class EditScheduleActivity extends AppCompatActivity {
     ImageView imgBack;
     TextInputLayout feedingTime,feedDate;
     TextInputEditText edtScheduleName, edtPortionSize, edtFeedingTime,edtFeedDate;
-    SwitchCompat switchWeekly,switchNotif;
+    SwitchCompat switchNotif;
     Button btnSubmit;
 
     @Override
@@ -78,9 +78,8 @@ public class EditScheduleActivity extends AppCompatActivity {
                 String portion = edtPortionSize.getText().toString().trim();
                 String feedtime = edtFeedingTime.getText().toString().trim();
                 String feeddate = edtFeedDate.getText().toString().trim();
-                boolean repeatweekly = switchWeekly.isChecked();
                 boolean notification = switchNotif.isChecked();
-                editSchedule(schedulename,portion,feedtime,feeddate,repeatweekly,notification);
+                editSchedule(schedulename,portion,feedtime,feeddate,notification);
             }
         });
     }
@@ -92,7 +91,6 @@ public class EditScheduleActivity extends AppCompatActivity {
         edtFeedDate = findViewById(R.id.edtFeedDate);
         feedingTime = findViewById(R.id.feedingTime);
         feedDate = findViewById(R.id.feedDate);
-        switchWeekly = findViewById(R.id.switchWeekly);
         switchNotif = findViewById(R.id.switchNotif);
         btnSubmit = findViewById(R.id.btnSubmit);
     }
@@ -107,10 +105,9 @@ public class EditScheduleActivity extends AppCompatActivity {
             edtFeedDate.setText(schedule.getFeedDate());
             edtFeedingTime.setText(schedule.getFeedTime());
             switchNotif.setChecked(schedule.isNotification());
-            switchWeekly.setChecked(schedule.isRepeat_weekly());
         }
     }
-    private void editSchedule(String schedulename, String portion, String feedtime, String feeddate, boolean repeatweekly, boolean notification){
+    private void editSchedule(String schedulename, String portion, String feedtime, String feeddate, boolean notification){
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         String userId = mAuth.getCurrentUser().getUid();
@@ -143,7 +140,6 @@ public class EditScheduleActivity extends AppCompatActivity {
         updateData.put("Portion",portion);
         updateData.put("FeedTime",feedtime);
         updateData.put("FeedDate",feeddate);
-        updateData.put("repeat_weekly",repeatweekly);
         updateData.put("notification",notification);
 
         db.collection("Schedule")
@@ -182,10 +178,8 @@ public class EditScheduleActivity extends AppCompatActivity {
                 int selectedHour = timePicker.getHour();
                 int selectedMinute = timePicker.getMinute();
 
-                // Format jadi String HH:mm (2 digit)
                 selectedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
 
-                // Tampilkan ke EditText
                 edtFeedingTime.setText(selectedTime);
             }
         });
