@@ -39,7 +39,7 @@ import java.util.Collections;
 
 public class HomeFragment extends Fragment {
     TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvBattery, txvUsername, btnToCreate;
-    Button btnFeedNow;
+    Button btnFeedNow, btnStream;
     RecyclerView lsvTask;
     ImageView btnDone;
     WebView imgCamera;
@@ -71,6 +71,9 @@ public class HomeFragment extends Fragment {
                 toCreateTask();
             }
         });
+        startStream();
+
+
 
         return view;
     }
@@ -91,6 +94,7 @@ public class HomeFragment extends Fragment {
         txvUsername = view.findViewById(R.id.txvUsername);
         imgCamera = view.findViewById(R.id.imgCamera);
         btnFeedNow = view.findViewById(R.id.btnFeed);
+        btnStream = view.findViewById(R.id.btnStream);
         btnDone = view.findViewById(R.id.btnDone);
         btnToCreate = view.findViewById(R.id.btnToCreate);
         lsvTask = view.findViewById(R.id.lsvTask);
@@ -189,6 +193,66 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    public void startStream() {
+        DatabaseReference streamRef = FirebaseDatabase.getInstance().getReference("pawfeeder/camera/stream_status");
+
+        final boolean[] isStreaming = {false};
+
+        streamRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Boolean status = snapshot.getValue(Boolean.class);
+                if (status != null) {
+                    isStreaming[0] = status;
+                    updateButtonUi(isStreaming[0]);
+                    if (isStreaming[0]) {
+                        liveCamera();
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Gagal membaca status stream awal dari Firebase", error.toException());
+            }
+        });
+
+        btnStream.setOnClickListener(v -> {
+            isStreaming[0] = !isStreaming[0];
+
+            streamRef.setValue(isStreaming[0])
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Perintah Stream dikirim ke Firebase: " + isStreaming[0]);
+                        updateButtonUi(isStreaming[0]);
+
+                        if (isStreaming[0]) {
+                            liveCamera();
+                        } else {
+                            if (imgCamera != null) {
+                                imgCamera.stopLoading();
+                                imgCamera.loadUrl("about:blank");
+                                imgCamera.setBackgroundColor(Color.BLACK);
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Gagal mengirim perintah Stream ke Firebase", e);
+                        // Kembalikan status jika gagal
+                        isStreaming[0] = !isStreaming[0];
+                        updateButtonUi(isStreaming[0]); // Perbarui UI kembali ke status lama
+                    });
+        });
+    }
+
+    private void updateButtonUi(boolean streaming) {
+        if (streaming) {
+            btnStream.setText("STOP STREAMING");
+            btnStream.setBackgroundColor(Color.parseColor("#FF4081"));
+        } else {
+            btnStream.setText("START STREAM");
+            btnStream.setBackgroundColor(Color.parseColor("#4CAF50"));
+        }
+    }
+
 
     public void readData() {
         if (auth.getCurrentUser() == null) {
@@ -280,7 +344,7 @@ public class HomeFragment extends Fragment {
         }
     }
     private void initCameraIp() {
-        cameraRef = FirebaseDatabase.getInstance().getReference("pawfeeder/camera_ip");
+        cameraRef = FirebaseDatabase.getInstance().getReference("pawfeeder/camera/camera_ip");
         cameraRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
