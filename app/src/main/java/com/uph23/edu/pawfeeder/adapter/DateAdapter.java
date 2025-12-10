@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
@@ -76,11 +77,11 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.DateViewHolder
 
         if(isSelected){
             holder.tvDayName.setTextColor(Color.WHITE);
-            holder.container.setBackgroundColor(Color.BLUE);
+            holder.cvDates.setBackgroundColor(Color.BLUE);
             holder.tvDate.setTextColor(Color.WHITE);
         }
         else{
-            holder.container.setBackgroundColor(Color.WHITE);
+            holder.cvDates.setBackgroundColor(Color.WHITE);
             holder.tvDayName.setTextColor(Color.parseColor("#888888"));
             holder.tvDate.setTextColor(Color.BLACK);
         }
@@ -117,14 +118,14 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.DateViewHolder
     public class DateViewHolder extends RecyclerView.ViewHolder {
         TextView tvDayName, tvDate;
         View dotindicator;
-        LinearLayout container;
+        CardView cvDates;
 
         public DateViewHolder(@NonNull View itemView) {
             super(itemView);
             tvDayName = itemView.findViewById(R.id.tvDayName);
             tvDate = itemView.findViewById(R.id.tvDate);
             dotindicator = itemView.findViewById(R.id.dotIndicator);
-            container = itemView.findViewById(R.id.container);
+            cvDates = itemView.findViewById(R.id.cvDate);
         }
 
     }
