@@ -151,6 +151,7 @@ public class EditScheduleActivity extends AppCompatActivity {
                     Map<String, Object> autoData = new HashMap<>();
                     autoData.put("feed_date", feeddate);
                     autoData.put("feed_time", feedtime);
+                    autoData.put("portion",portion);
 
                     myRef.child(scheduleId).setValue(autoData)
                             .addOnSuccessListener(a -> {

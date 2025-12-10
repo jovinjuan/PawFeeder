@@ -316,7 +316,7 @@
         <androidx.cardview.widget.CardView
             android:id="@+id/cardConsumption"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="300dp"
             app:cardCornerRadius="14dp"
             app:cardElevation="6dp"
             android:layout_marginTop="12dp"
@@ -372,7 +372,7 @@
                     <com.github.mikephil.charting.charts.BarChart
                         android:id="@+id/barChartConsumption"
                         android:layout_width="match_parent"
-                        android:layout_height="150dp">
+                        android:layout_height="280dp">
                     </com.github.mikephil.charting.charts.BarChart>
 
                 </LinearLayout>

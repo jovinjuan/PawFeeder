@@ -127,6 +127,7 @@ public class CreateScheduleActivity extends AppCompatActivity {
            Map<String, Object> autoData = new HashMap<>();
            autoData.put("feed_date", feeddate);
            autoData.put("feed_time", feedtime);
+           autoData.put("portion",portion);
            myRef.child(key).setValue(autoData);
 
            Toast.makeText(this, "Feeding Schedule has been set", Toast.LENGTH_SHORT).show();

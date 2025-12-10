@@ -256,8 +256,5 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
     public void onNotif(Schedule schedule) {
 
     }
-    private void autoFeed(){
-
-    }
 }
 

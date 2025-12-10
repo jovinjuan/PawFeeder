@@ -118,68 +118,97 @@ public class ProgressFragment extends Fragment {
         });
     }
     private void loadCharts(String type){
-       db.collection("Daily_Consumption")
-               .orderBy("timestamp", Query.Direction.ASCENDING)
-               .limit(7)
-               .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                   @Override
-                   public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                       List<BarEntry> barEntry = new ArrayList<BarEntry>();
-                       List<String> timestamp = new ArrayList<>();
-                       int index = 0;
-                       for(DocumentSnapshot doc : queryDocumentSnapshots) {
-                           Double value = type.equals("food") ? doc.getDouble("food") : doc.getDouble("drink");
-                           Timestamp times = doc.getTimestamp("timestamp");
-                           if (value != null & times != null) {
-                               Date date = times.toDate();
-                               SimpleDateFormat sdf = new SimpleDateFormat("dd-mm-yy HH:mm", Locale.getDefault());
-                               String waktu = sdf.format(date);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if(user == null){return;}
+        String uid = user.getUid();
+        db.collection("Daily_Consumption")
+                .whereEqualTo("user_id",uid)
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .limit(7)
+                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-                               barEntry.add(index, new BarEntry(index, value.intValue()));
-                               timestamp.add(waktu);
-                               index++;
-                           }
-                           if(barEntry.isEmpty()){
-                               barChartConsumption.clear();
-                               barChartConsumption.setNoDataText("Belum ada data");
-                               barChartConsumption.invalidate();
-                               return;
-                           }
+                        // --- 1. DEKLARASI DATA SET ---
+                        List<BarEntry> barEntryList = new ArrayList<>();
+                        List<String> labels = new ArrayList<>(); // List untuk Label Sumbu X (Tanggal)
+                        int index = 0;
 
-                           barChartConsumption.setDrawBarShadow(false);
-                           barChartConsumption.setDrawValueAboveBar(true);
+                        // Flag untuk menentukan field yang akan diambil
+                        String valueField = type.equals("food") ? "food" : "drink";
 
-                           barChartConsumption.getDescription().setEnabled(false);
-                           // scaling can now only be done on x- and y-axis separately
-                           barChartConsumption.setPinchZoom(false);
+                        // --- 2. PROSES DATA (LOOP HANYA UNTUK MENGAMBIL DATA) ---
+                        for(DocumentSnapshot doc : queryDocumentSnapshots) {
+                            // Ambil field berdasarkan tipe (food/drink)
+                            Double value = doc.getDouble(valueField);
+                            Timestamp times = doc.getTimestamp("timestamp");
 
-                           barChartConsumption.setDrawGridBackground(false);
+                            if (value != null && times != null) {
+                                // Format Tanggal (gunakan "dd MMM" untuk label yang lebih ringkas)
+                                Date date = times.toDate();
+                                SimpleDateFormat sdf = new SimpleDateFormat("dd MMM", Locale.getDefault());
+                                String labelWaktu = sdf.format(date);
 
-                           int color = type.equals("food") ? Color.parseColor("#FF9800") : Color.parseColor("#2196F3");
-                           // chart.setDrawYLabels(false);
-                           BarDataSet dataSet = new BarDataSet(barEntry, type.equals("food") ? " Makanan (gram)" : "Minuman (ml)");
-                           dataSet.setColors(color);
-                           dataSet.setValueTextSize(12f);
+                                // Tambahkan Entry: X-axis adalah Index, Y-axis adalah Value
+                                barEntryList.add(new BarEntry(index, value.floatValue())); // Gunakan floatValue()
+                                labels.add(labelWaktu); // Simpan label untuk XAxis Formatter
+                                index++;
+                            }
+                        }
 
-                           BarData barData = new BarData(dataSet);
-                           barData.setBarWidth(0.9f);
-                           barChartConsumption.setData(barData);
-                           barChartConsumption.getDescription().setText(type.equals("food") ? "Grafik Konsumsi Makanan" : "Grafik Konsumsi Minuman");
-                           barChartConsumption.animateY(1000);
+                        // --- 3. LOGIKA JIKA DATA KOSONG ---
+                        if(barEntryList.isEmpty()){
+                            barChartConsumption.clear();
+                            barChartConsumption.setNoDataText("Belum ada data untuk ditampilkan.");
+                            barChartConsumption.invalidate();
+                            Log.d(TAG, "Tidak ada data ditemukan untuk chart.");
+                            return;
+                        }
 
-                           XAxis xAxis = barChartConsumption.getXAxis();
-                           xAxis.setGranularity(1f);
-                           xAxis.setValueFormatter(new IndexAxisValueFormatter(timestamp));
-                           xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-                           xAxis.setLabelRotationAngle(0);
+                        // --- 4. KONFIGURASI CHART (DI LUAR LOOP) ---
 
-                           barChartConsumption.setFitBars(true);
-                           barChartConsumption.invalidate();
-                       }
+                        // A. Persiapan DataSet
+                        int color = type.equals("food") ? Color.parseColor("#FF9800") : Color.parseColor("#2196F3");
+                        String labelText = type.equals("food") ? "Makanan (gram)" : "Minuman (ml)";
 
-                   }
-               });
+                        BarDataSet dataSet = new BarDataSet(barEntryList, labelText);
+                        dataSet.setColors(color);
+                        dataSet.setValueTextSize(12f);
+                        dataSet.setValueTextColor(Color.BLACK); // Agar nilai di atas bar terlihat jelas
 
+                        BarData barData = new BarData(dataSet);
+                        barData.setBarWidth(0.8f); // Lebar Bar
+                        barChartConsumption.setData(barData);
+
+                        // B. Konfigurasi Visual Umum
+                        barChartConsumption.setDrawBarShadow(false);
+                        barChartConsumption.setDrawValueAboveBar(true);
+                        barChartConsumption.getDescription().setEnabled(false); // Deskripsi di sudut kanan bawah
+                        barChartConsumption.setDrawGridBackground(false);
+                        barChartConsumption.setPinchZoom(false);
+                        barChartConsumption.getDescription().setText(type.equals("food") ? "Konsumsi Makanan Harian" : "Konsumsi Minuman Harian");
+
+                        // C. Konfigurasi Sumbu X
+                        XAxis xAxis = barChartConsumption.getXAxis();
+                        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels)); // Menggunakan label yang sudah di-format
+                        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                        xAxis.setGranularity(1f); // Penting agar setiap label muncul
+                        xAxis.setDrawGridLines(false);
+                        xAxis.setLabelCount(labels.size()); // Menjamin semua label ditampilkan
+
+                        // D. Animasi dan Refresh
+                        barChartConsumption.animateY(1200);
+                        barChartConsumption.setFitBars(true); // Memastikan bar fit dengan sumbu X
+                        barChartConsumption.invalidate(); // Refresh tampilan chart
+                        Log.i(TAG, "Chart berhasil dimuat dengan " + barEntryList.size() + " entri.");
+
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Gagal memuat data chart dari Firestore: ", e);
+                    barChartConsumption.setNoDataText("Gagal memuat data.");
+                    barChartConsumption.invalidate();
+                });
     }
     private void loadSpinner(){
         String [] items = {"Food","Water"};
@@ -194,7 +223,7 @@ public class ProgressFragment extends Fragment {
                     loadCharts("food");
                 }
                 else{
-                    loadCharts("water");
+                    loadCharts("drink");
                 }
             }
             @Override
