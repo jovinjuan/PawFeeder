@@ -205,8 +205,10 @@ public class HomeFragment extends Fragment {
                 if (status != null) {
                     isStreaming[0] = status;
                     updateButtonUi(isStreaming[0]);
-                    if (isStreaming[0]) {
-                        liveCamera();
+                    if (!isStreaming[0] && imgCamera != null) {
+                        imgCamera.stopLoading();
+                        imgCamera.loadUrl("about:blank");
+                        imgCamera.setBackgroundColor(Color.BLACK);
                     }
                 }
             }

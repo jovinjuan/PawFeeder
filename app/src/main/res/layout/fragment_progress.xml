@@ -372,7 +372,7 @@
                     <com.github.mikephil.charting.charts.BarChart
                         android:id="@+id/barChartConsumption"
                         android:layout_width="match_parent"
-                        android:layout_height="280dp">
+                        android:layout_height="230dp">
                     </com.github.mikephil.charting.charts.BarChart>
 
                 </LinearLayout>
