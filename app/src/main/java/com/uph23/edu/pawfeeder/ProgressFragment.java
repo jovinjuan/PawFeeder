@@ -39,9 +39,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 
@@ -75,6 +77,7 @@ public class ProgressFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         loadStock();
+        calculateStreak();
         loadSpinner();
         loadStats();
 
@@ -107,7 +110,7 @@ public class ProgressFragment extends Fragment {
 
     private void loadStats() {
         loadConsumption();
-        loadRTDB();
+        loadStreak();
     }
 
     private void loadConsumption() {
@@ -138,30 +141,6 @@ public class ProgressFragment extends Fragment {
                         }
                     }
                 });
-    }
-
-    private void loadRTDB() {
-        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("pawfeeder");
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (!dataSnapshot.exists()) {
-                    Log.d(TAG, "Data pawfeeder belum ada di RTDB.");
-                    return;
-                }
-
-                Integer totalRefill = dataSnapshot.child("refill").getValue(Integer.class);
-                Integer currentStreak = dataSnapshot.child("streak").getValue(Integer.class);
-
-                txvRefill.setText(totalRefill != null ? String.valueOf(totalRefill) : "0");
-                txvStreak.setText(currentStreak != null ? String.valueOf(currentStreak) : "0");
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.w(TAG, "Gagal membaca nilai realtime dari RTDB.", error.toException());
-            }
-        });
     }
 
     private void loadCharts(String type) {
@@ -284,6 +263,103 @@ public class ProgressFragment extends Fragment {
             }
         });
     }
+    private void calculateStreak(){
+        SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd",Locale.getDefault());
+        String todaydate = date.format(new Date());
+
+        db.collection("Daily_Consumption")
+                .orderBy(FieldPath.documentId(), Query.Direction.ASCENDING)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if(task.isSuccessful() && task.getResult() != null) {
+                            List<String> dates = new ArrayList<>();
+                            for(DocumentSnapshot document : task.getResult()){
+                                dates.add(document.getId());
+                            }
+                             countDates(dates,todaydate);
+                        }
+                        else{
+                            Log.e(TAG, "Gagal memuat data", task.getException());
+                        }
+                    }
+                });
+    }
+    private void countDates(List<String> dates,String todaydate){
+        int streak = 0;
+        if(dates.isEmpty()){streak = 0;}
+        if(!dates.contains(todaydate)){streak = 0;}
+
+        try{
+            SimpleDateFormat sdf = new SimpleDateFormat("yyy-MM-dd",Locale.getDefault());
+            Date currentDate = sdf.parse(todaydate);
+
+            for(int i = dates.size() - 1; i >= 0; i--){
+                Date docDate = sdf.parse(dates.get(i));
+
+                long difference = currentDate.getTime() - docDate.getTime();
+                long daydif = difference/ (24 * 60 * 60 * 1000);
+
+                if(daydif == streak){
+                    streak++;
+                }
+                else if(daydif > streak){
+                    break;
+                }
+            }
+
+        }catch (Exception e){
+            Log.e(TAG,"Error calculating streak",e);
+        }
+        setStreak(streak);
+    }
+    private void setStreak(int streak){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = user.getUid();
+       Map<String,Object> streaks = new HashMap<>();
+       streaks.put("Streak",streak);
+
+        db.collection("Exp")
+                .document(uid)
+                .set(streaks, SetOptions.merge())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("STREAK", "Streak berhasil diperbarui ke Exp/" + uid + ": " + streak);
+                        // Update UI setelah berhasil
+                        txvStreak.setText(String.valueOf(streak));
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("STREAK", "Gagal memperbarui streak di Exp/" + uid, e);
+                    }
+                });
+    }
+    private void loadStreak(){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = user.getUid();
+        db.collection("Exp")
+                .document(uid)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if(task.isSuccessful()){
+                            DocumentSnapshot document = task.getResult();
+                            Long currentStreak = document.getLong("Streak");
+                            txvStreak.setText(currentStreak != null ? String.valueOf(currentStreak) : "0");
+                            Log.d("STREAK", "Streak berhasil diload dari UID: " + uid);
+                        }
+                        else{
+                            Log.e("STREAK", "Error load streak", task.getException());
+                            txvStreak.setText("Err");
+                        }
+                    }
+                });
+    }
     private void loadStock() {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("pawfeeder");
         // --- Listener Stok Makanan ---
@@ -393,4 +469,5 @@ public class ProgressFragment extends Fragment {
                     }
                 });
     }
+
 }

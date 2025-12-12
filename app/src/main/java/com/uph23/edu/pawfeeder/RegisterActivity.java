@@ -121,10 +121,8 @@ public class RegisterActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         Log.d("Register", "createUserWithEmail:success");
 
-                        // Ambil UID user yang baru dibuat
                         String userId = mAuth.getCurrentUser().getUid();
 
-                        // Buat data user
                         Map<String, Object> user = new HashMap<>();
                         user.put("Username", username);
                         user.put("Email", email);
@@ -134,8 +132,8 @@ public class RegisterActivity extends AppCompatActivity {
                         progress.put("Level", 1);
                         progress.put("ExpNextLevel", 100);
                         progress.put("Title","Paw Novice");
+                        progress.put("Streak",0);
 
-                        // Simpan ke Firestore dengan UID sebagai document ID
                         db.collection("Users").document(userId)
                                 .set(user)
                                 .addOnSuccessListener(aVoid ->
