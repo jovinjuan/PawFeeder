@@ -183,6 +183,34 @@ public class HomeFragment extends Fragment {
                     txvMakanan.setText(stokMakanan != null ? stokMakanan + "% left" : "N/A");
                     txvMinuman.setText(stokMinuman != null ? stokMinuman + "% left" : "N/A");
                     txvBattery.setText(battery != null ? battery + "%" : "0%");
+
+                    // Logika Status Makanan
+                    if (stokMakanan != null) {
+                        if (stokMakanan > 50) {
+                            txvStatusMakan.setText("Good");
+                            txvStatusMakan.setTextColor(Color.GREEN); // Hijau
+                        } else {
+                            txvStatusMakan.setText("Refill");
+                            txvStatusMakan.setTextColor(Color.RED); // Merah
+                        }
+                    } else {
+                        txvStatusMakan.setText("N/A");
+                        txvStatusMakan.setTextColor(Color.GRAY);
+                    }
+
+                    // Logika Status Minuman
+                    if (stokMinuman != null) {
+                        if (stokMinuman > 50) {
+                            txvStatusMinum.setText("Good");
+                            txvStatusMinum.setTextColor(Color.GREEN); // Hijau
+                        } else {
+                            txvStatusMinum.setText("Refill");
+                            txvStatusMinum.setTextColor(Color.RED); // Merah
+                        }
+                    } else {
+                        txvStatusMinum.setText("N/A");
+                        txvStatusMinum.setTextColor(Color.GRAY);
+                    }
                 }
             }
 

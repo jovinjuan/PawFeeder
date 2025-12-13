@@ -3,6 +3,7 @@ package com.uph23.edu.pawfeeder;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,9 +15,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -67,6 +73,7 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
         updateMonthTitle();
         loadSchedulesData();
         scrollCalendarToToday();
+        deleteSchedule();
 
 
         txvAddSchedule.setOnClickListener(new View.OnClickListener() {
@@ -255,6 +262,44 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
     @Override
     public void onNotif(Schedule schedule) {
 
+    }
+    private void deleteSchedule(){
+        DatabaseReference statusRef = FirebaseDatabase.getInstance().getReference("pawfeeder/deleted_schedules");
+        statusRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                    String scheduleId = childSnapshot.getKey();
+                    if(scheduleId != null){
+                        db.collection("Schedule")
+                                .document(scheduleId)
+                                .delete()
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void unused) {
+                                        statusRef.child(scheduleId).removeValue()
+                                                .addOnSuccessListener(aVoid -> Log.d("RTDB", "ID Antrean dihapus"))
+                                                .addOnFailureListener(e -> Log.e("RTDB", "Gagal hapus ID Antrean"));
+                                        Log.d("Firestore", "Document berhasil dihapus: " + scheduleId);
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d("Firestore", "Document gagal hapus " + scheduleId);
+                                    }
+                                });
+                    }
+
+                    Log.d("FirebaseData", "Deleted Schedule ID: " + scheduleId);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d("FirebaseData", "Deleted Schedule ID (err)" + error);
+            }
+        });
     }
 }
 

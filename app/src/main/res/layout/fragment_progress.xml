@@ -72,7 +72,7 @@
 
                             <LinearLayout
                                 android:layout_width="0dp"
-                                android:layout_height="100dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:gravity="center_vertical"
                                 android:orientation="vertical">
@@ -412,7 +412,7 @@
 
                     <ImageView
                         android:id="@+id/imgAutomationMaster"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="40dp"
                         android:src="@drawable/badges_automationmaster" />
@@ -465,7 +465,7 @@
 
                     <ImageView
                         android:id="@+id/imgRefillNinja"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="40dp"
                         android:src="@drawable/badges_refillninja" />
@@ -569,7 +569,7 @@
 
                     <ImageView
                         android:id="@+id/imgFullTank"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="40dp"
                         android:src="@drawable/badges_fulltank" />
@@ -621,7 +621,7 @@
 
                     <ImageView
                         android:id="@+id/imgFirstBite"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="40dp"
                         android:src="@drawable/badges_firstbite" />
@@ -673,7 +673,7 @@
 
                     <ImageView
                         android:id="@+id/imgOnTheClock"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="40dp"
                         android:src="@drawable/badges_ontheclock" />

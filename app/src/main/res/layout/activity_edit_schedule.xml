@@ -6,12 +6,12 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CreateScheduleActivity">
+    tools:context=".CreateScheduleActivity"
+    android:background="@drawable/background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/background"
         android:orientation="vertical"
         android:paddingLeft="15dp"
         android:paddingTop="25dp"
