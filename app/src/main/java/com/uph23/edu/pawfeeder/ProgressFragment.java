@@ -1,5 +1,6 @@
 package com.uph23.edu.pawfeeder;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -59,7 +60,7 @@ public class ProgressFragment extends Fragment {
     TextView txvStreak, txvDrink, txvFeed, txvRefill;
     Spinner spiConsumption;
     BarChart barChartConsumption;
-    ImageView imgAutomationMaster, imgRefillNinja, imgSupplySteady, imgFullTank, imgFirstBite, imgOnTheClock;
+    ImageView imgAutomationMaster, imgRefillNinja, imgSupplySteady, imgFullTank, imgFirstBite, imgOnTheClock, imgHistory;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private static final String TAG = "Progress Fragment";
@@ -70,7 +71,7 @@ public class ProgressFragment extends Fragment {
 
 
     public ProgressFragment() {
-        // Required empty public constructor
+
     }
 
     @Override
@@ -80,6 +81,13 @@ public class ProgressFragment extends Fragment {
         calculateStreak();
         loadSpinner();
         loadStats();
+
+        imgHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toHistory();
+            }
+        });
 
 
     }
@@ -106,6 +114,7 @@ public class ProgressFragment extends Fragment {
         imgFirstBite = view.findViewById(R.id.imgFirstBite);
         imgFullTank = view.findViewById(R.id.imgFullTank);
         imgOnTheClock = view.findViewById(R.id.imgOnTheClock);
+        imgHistory = view.findViewById(R.id.imgHistory);
     }
 
     private void loadStats() {
@@ -469,5 +478,8 @@ public class ProgressFragment extends Fragment {
                     }
                 });
     }
-
+    public void toHistory(){
+        Intent intent = new Intent(requireContext(), HistoryActivity.class);
+        startActivity(intent);
+    }
 }
