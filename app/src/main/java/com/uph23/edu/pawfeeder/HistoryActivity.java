@@ -2,6 +2,7 @@ package com.uph23.edu.pawfeeder;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.uph23.edu.pawfeeder.adapter.HistoryAdapter;
 import com.uph23.edu.pawfeeder.model.History;
 
@@ -66,6 +68,7 @@ public class HistoryActivity extends AppCompatActivity {
         });
 
         getTotalSchedule();
+        getTotalFood();
 
     }
     public void init(){
@@ -103,6 +106,36 @@ public class HistoryActivity extends AppCompatActivity {
                         int totalSchedule = queryDocumentSnapshots.size();
                         txvTotalSchedule.setText(String.valueOf(totalSchedule));
                     }
+                });
+    }
+    private void getTotalFood(){
+        String userId = mAuth.getCurrentUser().getUid();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String todayDate = sdf.format(new Date());
+
+        db.collection("Schedule")
+                .whereEqualTo("Id_User", userId)
+                .whereEqualTo("FeedDate", todayDate)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    int totalPortion = 0;
+                    if(queryDocumentSnapshots.isEmpty()){
+                        txvFood.setText("0");
+                    }
+                    else{
+                        for (QueryDocumentSnapshot document : queryDocumentSnapshots){
+                           Object value = document.get("Portion");
+                           if(value != null){
+                               int portion = Integer.parseInt( (String) value);
+                               totalPortion += portion;
+                           }
+                        }
+                        txvFood.setText(String.valueOf(totalPortion) + "g");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("History", "Gagal mengambil data", e);
                 });
     }
 }
