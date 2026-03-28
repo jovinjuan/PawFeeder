@@ -11,13 +11,32 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.uph23.edu.pawfeeder.adapter.HistoryAdapter;
+import com.uph23.edu.pawfeeder.model.History;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class HistoryActivity extends AppCompatActivity {
 
     ImageView imgBack, imgFilter;
     TextView txvTotalSchedule, txvFood, txvMissed, txvTodayDate, txvYesterdayDate;
     RecyclerView rvTodaySchedule, rvYesterdaySchedule;
+    HistoryAdapter adapter;
+    List<History> historyList;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,12 +48,25 @@ public class HistoryActivity extends AppCompatActivity {
             return insets;
         });
         init();
+        historyList = new ArrayList<>();
+        prepareData(); // Untuk development saja , data dummy
+
+        adapter = new HistoryAdapter(historyList);
+        rvTodaySchedule.setLayoutManager(new LinearLayoutManager(this));
+        rvYesterdaySchedule.setLayoutManager(new LinearLayoutManager(this));
+
+        rvTodaySchedule.setAdapter(adapter);
+        rvYesterdaySchedule.setAdapter(adapter);
+
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 finish();
             }
         });
+
+        getTotalSchedule();
+
     }
     public void init(){
         imgBack = findViewById(R.id.imgBack);
@@ -46,5 +78,31 @@ public class HistoryActivity extends AppCompatActivity {
         txvYesterdayDate = findViewById(R.id.txvYesterdayDate);
         rvTodaySchedule = findViewById(R.id.rvTodaySchedule);
         rvYesterdaySchedule = findViewById(R.id.rvYesterdaySchedule);
+    }
+    private void prepareData() {
+        historyList.add(new History("Auto Feeding",  "07.00 PM - 75 g", "SUCCESS"));
+        historyList.add(new History("Manual Feeding",  "08.30 AM - 50 g", "SUCCESS"));
+        historyList.add(new History("Failed Feeding", "12.00 PM - 75 g", "FAILED"));
+    }
+    private void getTotalSchedule(){
+        String userId = mAuth.getCurrentUser().getUid();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String todayDate = sdf.format(new Date());
+
+        db.collection("Schedule")
+                .whereEqualTo("Id_User", userId)
+                .whereEqualTo("FeedDate", todayDate)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+
+                    if(queryDocumentSnapshots.isEmpty()){
+                        txvTotalSchedule.setText("0");
+                    }
+                    else{
+                        int totalSchedule = queryDocumentSnapshots.size();
+                        txvTotalSchedule.setText(String.valueOf(totalSchedule));
+                    }
+                });
     }
 }

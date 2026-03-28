@@ -1,11 +1,10 @@
 package com.uph23.edu.pawfeeder.model;
 
 public class History {
-    private String title, mode, description, status;
+    private String title, description, status;
 
-    public History(String title, String mode, String description, String status) {
+    public History(String title, String description, String status) {
         this.title = title;
-        this.mode = mode;
         this.description = description;
         this.status = status;
     }
@@ -16,14 +15,6 @@ public class History {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public String getMode() {
-        return mode;
-    }
-
-    public void setMode(String mode) {
-        this.mode = mode;
     }
 
     public String getDescription() {

@@ -53,11 +53,11 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    // Di ScheduleFragment.java
+
     private static final String TAG = "Schedule Fragment";
 
     public ScheduleFragment() {
-        // Required empty public constructor
+
     }
 
     @Override
@@ -178,12 +178,11 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
                 c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
     }
     private void showFeedingSchedule(Date date){
-        if (feedAdapter == null) return;  // safety
+        if (feedAdapter == null) return;
 
         String dateKey = dateFormat.format(date);
         List<Schedule> todayList = new ArrayList<>();
 
-        // Filter dari scheduleList yang sudah full
         for (Schedule s : scheduleList) {
             if (dateKey.equals(s.getFeedDate())) {
                 todayList.add(s);
@@ -196,7 +195,7 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
     @Override
     public void onResume() {
         super.onResume();
-        loadSchedulesData();   // refresh otomatis setelah tambah/edit
+        loadSchedulesData();
     }
 
     @Override
@@ -237,20 +236,15 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
         db.collection("Schedule").document(schedule.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    // 2. Hapus data yang sesuai dari Realtime Database
                     DatabaseReference myRef = FirebaseDatabase.getInstance()
                             .getReference("pawfeeder/autofeed");
 
-                    // Gunakan scheduleId sebagai key (child) dan panggil removeValue()
                     myRef.child(schedule.getId()).removeValue()
                             .addOnSuccessListener(a -> {
                                 Log.d(TAG, "Jadwal berhasil dihapus dari Realtime DB: " + schedule.getId());
-                                // Opsional: Berikan feedback ke pengguna (misalnya Toast)
-                                // Toast.makeText(context, "Jadwal berhasil dihapus!", Toast.LENGTH_SHORT).show();
                             })
                             .addOnFailureListener(eRealtime -> {
                                 Log.e(TAG, "Gagal menghapus jadwal dari Realtime DB: " + schedule.getId(), eRealtime);
-                                // Berikan feedback bahwa ada masalah, meskipun di Firestore berhasil
                             });
                     Log.d(TAG, "Jadwal berhasil dihapus: " + schedule.getId());
                 })
