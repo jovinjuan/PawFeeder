@@ -198,27 +198,6 @@
                         android:paddingStart="50dp"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="20dp"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="16dp">
-
-                    <CheckBox
-                        android:id="@+id/checkBox"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="I agree to the processing of" />
-
-                    <TextView
-                        android:id="@+id/textView4"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" Personal Data"
-                        android:textStyle="bold"
-                        android:textColor="@color/primaryblue"/>
-                </LinearLayout>
-
                 <Button
                     android:id="@+id/btnSubmit"
                     android:layout_width="335dp"

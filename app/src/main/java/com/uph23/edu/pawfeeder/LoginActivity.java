@@ -28,7 +28,6 @@ public class LoginActivity extends AppCompatActivity {
     TextView txtRegister, txvForgotPassword;
     Button btnSubmit;
     private FirebaseAuth mAuth;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,11 +84,11 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
+
                             Log.d("L", "Login:success");
                             toMain();
                         } else {
-                            // If sign in fails, display a message to the user.
+
                             Log.w("L", "Login:failure", task.getException());
                             // SET ERROR
                             edtEmail.setError("Invalid credential");
@@ -105,6 +104,7 @@ public class LoginActivity extends AppCompatActivity {
     public void toMain(){
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
+        finish();
     }
 
     public void toForgotPassword(){
