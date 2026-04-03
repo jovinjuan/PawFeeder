@@ -48,16 +48,7 @@
             android:layout_marginTop="35dp"
             android:orientation="vertical">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edtFeedingTime"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="15dp"
-                android:background="@null"
-                android:focusable="false"
-                android:inputType="none"
-                android:paddingVertical="20dp"
-                android:textColor="@color/black" />
+
 
             <TextView
                 android:id="@+id/textView10"
@@ -152,6 +143,17 @@
                 app:boxStrokeWidthFocused="0dp"
                 app:endIconDrawable="@drawable/clock"
                 app:endIconMode="custom">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtFeedingTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="15dp"
+                    android:background="@null"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:paddingVertical="20dp"
+                    android:textColor="@color/black" />
 
             </com.google.android.material.textfield.TextInputLayout>
             <TextView

@@ -51,6 +51,7 @@ public class HistoryActivity extends AppCompatActivity {
     RecyclerView rvFeedingHistory;
     HistoryAdapter adapter;
     List<History> historyList;
+    List<History> allhistoryList;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private DatabaseReference rtRef;
@@ -69,12 +70,12 @@ public class HistoryActivity extends AppCompatActivity {
         });
         init();
         historyList = new ArrayList<>();
+        allhistoryList = new ArrayList<>();
         loadHistoryList();
-        fetchHistoryLog();
         loadHistoryLog();
         getTotalSchedule();
         getTotalFood();
-//        getMissedSchedule();
+        getMissedSchedule();
 
 
         imgBack.setOnClickListener(new View.OnClickListener() {
@@ -103,6 +104,7 @@ public class HistoryActivity extends AppCompatActivity {
         txvFood = findViewById(R.id.txvFood);
         txvMissed = findViewById(R.id.txvMissed);
         txvSelectedDate = findViewById(R.id.txvSelectedDate);
+        txvSelectedDate.setText("Today ⌵");
         llFilterFood = findViewById(R.id.llFilterFood);
         llFilterWater = findViewById(R.id.llFilterWater);
         llFilterOption = findViewById(R.id.llFilterOption);
@@ -173,16 +175,16 @@ public class HistoryActivity extends AppCompatActivity {
             int itemID = item.getItemId();
             if(itemID == R.id.filter_today){
                 txvSelectedDate.setText("Today ⌵");
-//                fetchHistoryData(calendar.getTime());
+                filterByTodayDate();
                 return true;
             } else if (itemID == R.id.filter_yesterday) {
                 calendar.add(Calendar.DATE, -1);
                 txvSelectedDate.setText("Yesterday ⌵");
-//                fetchHistoryData(calendar.getTime());
+                filterByYesterdayDate();
                 return true;
             } else if (itemID == R.id.filter_week) {
-                txvSelectedDate.setText("Last 7 Days");
-//                fetchHistoryData(7);
+                txvSelectedDate.setText("Last 7 Days ⌵");
+                filterByLastWeek();
                 return true;
             }
             return false;
@@ -241,50 +243,114 @@ public class HistoryActivity extends AppCompatActivity {
         });
     }
     private void loadHistoryLog(){
+        fetchHistoryLog();
         String userID = mAuth.getCurrentUser().getUid();
 
         db.collection("History")
                 .whereEqualTo("Id_User", userID)
                 .orderBy("Timestamp", Query.Direction.DESCENDING)
-                .limit(5)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    historyList.clear();
+                    allhistoryList.clear();
                     for(QueryDocumentSnapshot document : queryDocumentSnapshots){
                         History history = document.toObject(History.class);
-                        historyList.add(history);
+                        allhistoryList.add(history);
                     }
+                    txvSelectedDate.setText("Today ⌵");
+                    filterByTodayDate();
                     adapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> Log.e("History", "Failed", e));
     }
-//    private void getMissedSchedule(){
-//        String userID = mAuth.getCurrentUser().getUid();
-//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-//        String todayDate = sdf.format(new Date());
-//
-//        String startToday = todayDate + " 00:00:00";
-//        String endToday = todayDate + " 23:59:59";
-//
-//        db.collection("History")
-//                .whereEqualTo("Id_User", userID)
-//                .whereEqualTo("Status", "FAILED")
-//                .whereGreaterThanOrEqualTo("Timestamp", startToday)
-//                .whereLessThanOrEqualTo("Timestamp", endToday)
-//                .get()
-//                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-//                        int totalMissed = queryDocumentSnapshots.size();
-//                        txvMissed.setText(String.valueOf(totalMissed));
-//                        Log.d("Firestore", "Berhasil: " + totalMissed);
-//                    }
-//                })
-//                .addOnFailureListener(new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception e) {
-//                        Log.e("Firestore", "Gagal ambil data", e);
-//                    }
-//                });
-//    }
+    private void getMissedSchedule(){
+        String userID = mAuth.getCurrentUser().getUid();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String todayDate = sdf.format(new Date());
+
+        String startToday = todayDate + " 00:00:00";
+        String endToday = todayDate + " 23:59:59";
+
+        db.collection("History")
+                .whereEqualTo("Id_User", userID)
+                .whereEqualTo("Status", "FAILED")
+                .whereGreaterThanOrEqualTo("Timestamp", startToday)
+                .whereLessThanOrEqualTo("Timestamp", endToday)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        int totalMissed = queryDocumentSnapshots.size();
+                        txvMissed.setText(String.valueOf(totalMissed));
+                        Log.d("Firestore", "Berhasil: " + totalMissed);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e("Firestore", "Gagal ambil data", e);
+                    }
+                });
+    }
+    private String getDate(int daysOffset){
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DATE, daysOffset);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(calendar.getTime());
+    }
+    private void filterByTodayDate(){
+        String todayDate = getDate(0);
+
+        List<History> filterTodayList = new ArrayList<>();
+
+        for(History h : allhistoryList){
+            String timestamp = h.getTimestamp();
+            if (timestamp != null && timestamp.length() >= 10) {
+                String date = timestamp.substring(0, 10);
+
+                if (date.equals(todayDate)) {
+                    filterTodayList.add(h);
+                }
+            }
+        }
+        updateView(filterTodayList);
+    }
+    private void filterByYesterdayDate(){
+        String todayDate = getDate(-1);
+
+        List<History> filterYesterdayList = new ArrayList<>();
+
+        for(History h : allhistoryList){
+            String timestamp = h.getTimestamp();
+            if (timestamp != null && timestamp.length() >= 10) {
+                String date = timestamp.substring(0, 10);
+
+                if (date.equals(todayDate)) {
+                    filterYesterdayList.add(h);
+                }
+            }
+        }
+        updateView(filterYesterdayList);
+    }
+    private void filterByLastWeek(){
+        List<History> filterLastWeekList = new ArrayList<>();
+
+        String limitDate = getDate(-7);
+        String todayDate = getDate(0);
+
+        for (History h : allhistoryList) {
+            String timestamp = h.getTimestamp();
+            if (timestamp != null && timestamp.length() >= 10) {
+                String docDate = timestamp.substring(0, 10);
+                if (docDate.compareTo(limitDate) >= 0 && docDate.compareTo(todayDate) <= 0) {
+                    filterLastWeekList.add(h);
+                }
+            }
+        }
+        updateView(filterLastWeekList);
+    }
+    private void updateView(List<History> newList) {
+        historyList.clear();
+        historyList.addAll(newList);
+        adapter.notifyDataSetChanged();
+    }
 }

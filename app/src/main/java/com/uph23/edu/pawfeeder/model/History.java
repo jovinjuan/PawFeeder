@@ -1,4 +1,5 @@
 package com.uph23.edu.pawfeeder.model;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -73,19 +74,25 @@ public class History {
     public void setPortion(int portion) {
         Portion = portion;
     }
-    public String getDescription(){
-        String time = "";
+    public String formatTime(String timestamp){
         try {
-            SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-            SimpleDateFormat output = new SimpleDateFormat("hh.mm a", Locale.getDefault());
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
-            Date date = input.parse(Timestamp);
-            time = output.format(date);
+            Date date = inputFormat.parse(timestamp);
+
+            SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+            return outputFormat.format(date);
         } catch (Exception e) {
-            if (Timestamp != null && Timestamp.length() >= 16) {
-                time = Timestamp.substring(11, 16);
-            }
+            e.printStackTrace();
+            return timestamp;
         }
-        return time + "-" + Portion + "g";
+    }
+    public String formatPortion(int portion){
+        if(portion <= 0){
+            return "0 gr";
+        }
+
+        return portion + "gr";
     }
 }

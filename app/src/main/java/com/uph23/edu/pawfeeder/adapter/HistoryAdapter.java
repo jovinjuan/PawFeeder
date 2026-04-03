@@ -34,7 +34,11 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         History history = list_history.get(position);
 
         holder.txvTitle.setText(history.getTitle());
-        holder.txvDescription.setText(history.getDescription());
+        String timestamp = history.getTimestamp();
+        holder.txvTime.setText(history.formatTime(timestamp));
+
+        int portion = history.getPortion();
+        holder.txvPortion.setText(history.formatPortion(portion));
 
         String status = history.getStatus();
         holder.txvStatus.setText(status);
@@ -54,13 +58,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             if(status.equalsIgnoreCase("FAILED")){
                 holder.imgIcon.setImageResource(R.drawable.missed_feed);
             }
-            else if(type.equalsIgnoreCase("auto_feed")){
+            else if(type.equalsIgnoreCase("auto")){
                 holder.imgIcon.setImageResource(R.drawable.auto_feed);
             }
             else if (type.equalsIgnoreCase("manual_touch")){
                 holder.imgIcon.setImageResource(R.drawable.manual_feed);
             }
         }
+
     }
 
     @Override
@@ -69,13 +74,14 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txvTitle, txvDescription, txvStatus;
+        TextView txvTitle, txvTime, txvStatus, txvPortion;
         ImageView imgIcon;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             txvTitle   = itemView.findViewById(R.id.txvTitle);
-            txvDescription    = itemView.findViewById(R.id.txvDescription);
+            txvTime    = itemView.findViewById(R.id.txvTime);
+            txvPortion = itemView.findViewById(R.id.txvPortion);
             txvStatus = itemView.findViewById(R.id.txvStatus);
             imgIcon  = itemView.findViewById(R.id.imgIcon);
         }

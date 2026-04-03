@@ -235,19 +235,8 @@
                 android:background="@color/white"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="6dp"
-                android:text="Feb 26 ⌵"
+                android:text="All ⌵"
                 android:textColor="@color/black"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/txvViewAll"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:text="View All"
-                android:textColor="#4A90E2"
-                android:textSize="14sp"
                 android:textStyle="bold" />
 
         </RelativeLayout>
