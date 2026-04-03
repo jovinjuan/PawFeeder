@@ -198,29 +198,39 @@ public class ScheduleFragment extends Fragment implements DateAdapter.OnDateClic
         loadSchedulesData();
     }
 
-    @Override
     public void onFeedNow(Schedule schedule) {
-        DatabaseReference servoRef = FirebaseDatabase.getInstance().getReference("pawfeeder/makan/servo");
+        db = FirebaseFirestore.getInstance();
+        String scheduleId = schedule.getId();
+        double porsiTarget = Double.parseDouble(schedule.getPortion());
+        double hasilKalibrasi = 43.0;
 
-        servoRef.setValue(true).addOnSuccessListener(avoid -> {
-            Log.d("FeedNow","Servo bernilai true");
+        long durasiMms = (long) ((porsiTarget / hasilKalibrasi) * 1000);
+
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("pawfeeder");
+        DatabaseReference servoRef = rootRef.child("makan/kendali_servo");
+
+        servoRef.setValue(true).addOnSuccessListener(avoid1 -> {
+            Log.d("PawFeeder", "Servo ON. Mengeluarkan " + porsiTarget + "gr selama " + durasiMms + "ms");
+
+            new android.os.Handler().postDelayed(() -> {
+
+                servoRef.setValue(false).addOnSuccessListener(avoid2 -> {
+                    rootRef.child("autofeed").child(scheduleId).removeValue()
+                            .addOnSuccessListener(avoid3 -> {
+                                Log.d("PawFeeder", "Eksekusi porsi selesai & Jadwal dihapus.");
+                            });
+                });
+                db.collection("Schedule").document(scheduleId)
+                        .delete()
+                        .addOnSuccessListener(avoid4 -> {
+                            Log.d("PawFeeder", "Data di Firestore berhasil dihapus. Proses SELESAI.");
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("PawFeeder", "Gagal hapus Firestore: " + e.getMessage());
+                        });
+
+            }, durasiMms);
         });
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        servoRef.setValue(false)
-                                .addOnSuccessListener(aVoid -> {
-                                    Log.d("FeedNow", "Servo set ke FALSE");
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e("FeedNow", "Gagal set servo ke FALSE: " + e.getMessage());
-                                });
-                    }
-                },
-                3000
-        );
-
     }
 
     @Override

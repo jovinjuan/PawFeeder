@@ -173,7 +173,7 @@
                 android:id="@+id/btnFeed"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="15dp"
                 android:backgroundTint="@color/orange"
                 android:text="Feed Now"
                 android:textColor="@color/black"
@@ -182,78 +182,67 @@
                 app:cornerRadius="20dp" />
 
             <androidx.cardview.widget.CardView
+                android:id="@+id/cardConsumption"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:layout_marginBottom="10dp"
-                app:cardCornerRadius="16dp"
+                android:layout_height="300dp"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="6dp"
-                app:cardUseCompatPadding="false"
-                app:contentPadding="0dp">
-
-                <WebView
-                    android:id="@+id/imgCamera"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="#000000" />
-
-            </androidx.cardview.widget.CardView>
-
-            <Button
-                android:id="@+id/btnStream"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="15dp"
-                android:text="Start Stream"
-                android:backgroundTint="#4CAF50"
-                android:textAlignment="center"
-                android:layout_marginBottom="20dp"
-                android:textStyle="bold"
-                android:textSize="18dp"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="Device Status"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                android:layout_marginBottom="30dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:padding="15dp">
+                    android:padding="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Battery Level"
-                        android:textStyle="bold" />
-
-                    <ProgressBar
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="12dp"
-                        android:layout_marginTop="6dp"
-                        android:progress="80"
-                        android:progressDrawable="@drawable/progress_blue" />
-
-                    <TextView
-                        android:id="@+id/txvBattery"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="80%"
-                        android:textAlignment="textEnd"
-                        android:textColor="@color/black" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvConsumptionTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Daily Consumption"
+                                android:textStyle="bold"
+                                android:textColor="#1F2A44"
+                                android:textSize="18dp"/>
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <Spinner
+                            android:id="@+id/spiConsumption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
+                        </Spinner>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/barChartContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.github.mikephil.charting.charts.BarChart
+                            android:id="@+id/barChartConsumption"
+                            android:layout_width="match_parent"
+                            android:layout_height="230dp">
+                        </com.github.mikephil.charting.charts.BarChart>
+
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

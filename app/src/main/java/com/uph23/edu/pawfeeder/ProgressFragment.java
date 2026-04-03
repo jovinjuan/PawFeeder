@@ -7,6 +7,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -33,6 +36,7 @@ import com.google.firebase.Firebase;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,9 +51,12 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.uph23.edu.pawfeeder.adapter.HistoryAdapter;
+import com.uph23.edu.pawfeeder.model.History;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -57,11 +64,14 @@ import java.util.Locale;
 import java.util.Map;
 
 public class ProgressFragment extends Fragment {
-    TextView txvStreak, txvDrink, txvFeed, txvRefill;
-    Spinner spiConsumption;
-    BarChart barChartConsumption;
-    ImageView imgAutomationMaster, imgRefillNinja, imgSupplySteady, imgFullTank, imgFirstBite, imgOnTheClock, imgHistory;
+    TextView txvStreak, txvDrink, txvFeed, txvSelectedDate, txvSchedule;
+    RecyclerView rvFeedingHistory;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    HistoryAdapter adapter;
+    List<History> historyList;
+    List<History> allhistoryList;
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private DatabaseReference rtRef;
 
     private static final String TAG = "Progress Fragment";
     private long lastFoodStock = 0;
@@ -79,17 +89,18 @@ public class ProgressFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         loadStock();
         calculateStreak();
-        loadSpinner();
         loadStats();
+        historyList = new ArrayList<>();
+        allhistoryList = new ArrayList<>();
+        loadHistoryList();
+        loadHistoryLog();
 
-        imgHistory.setOnClickListener(new View.OnClickListener() {
+        txvSelectedDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toHistory();
+                showDateDropdown(view);
             }
         });
-
-
     }
 
     @Override
@@ -105,21 +116,16 @@ public class ProgressFragment extends Fragment {
         txvStreak = view.findViewById(R.id.txvStreak);
         txvDrink = view.findViewById(R.id.txvDrink);
         txvFeed = view.findViewById(R.id.txvFeed);
-        txvRefill = view.findViewById(R.id.txvRefill);
-        spiConsumption = view.findViewById(R.id.spiConsumption);
-        barChartConsumption = view.findViewById(R.id.barChartConsumption);
-        imgAutomationMaster = view.findViewById(R.id.imgAutomationMaster);
-        imgRefillNinja = view.findViewById(R.id.imgRefillNinja);
-        imgSupplySteady = view.findViewById(R.id.imgSupplySteady);
-        imgFirstBite = view.findViewById(R.id.imgFirstBite);
-        imgFullTank = view.findViewById(R.id.imgFullTank);
-        imgOnTheClock = view.findViewById(R.id.imgOnTheClock);
-        imgHistory = view.findViewById(R.id.imgHistory);
+        txvSchedule = view.findViewById(R.id.txvSchedule);
+        txvSelectedDate = view.findViewById(R.id.txvSelectedDate);
+        txvSelectedDate.setText("Today ⌵");
+        rvFeedingHistory = view.findViewById(R.id.rvFeedingHistory);
     }
 
     private void loadStats() {
         loadConsumption();
         loadStreak();
+        countSchedules();
     }
 
     private void loadConsumption() {
@@ -141,8 +147,16 @@ public class ProgressFragment extends Fragment {
                                     totalDrink += drinkValue;
                                 }
                             }
-                            txvFeed.setText(String.valueOf((int) totalFeed));
-                            txvDrink.setText(String.valueOf((int) totalDrink));
+
+                            double totalFeedKg = totalFeed / 1000.0;
+                            double totalDrinkL = totalDrink / 1000.0;
+
+                            String formattedFeed = String.format(Locale.US, "%.1f", totalFeedKg);
+                            String formattedDrink = String.format(Locale.US, "%.1f", totalDrinkL);
+
+                            txvFeed.setText(formattedFeed);
+                            txvDrink.setText(formattedDrink);
+
                         } else {
                             Log.e(TAG, "Gagal mendapatkan data total konsumsi dari Firestore.", task.getException());
                             txvFeed.setText("Err");
@@ -152,126 +166,6 @@ public class ProgressFragment extends Fragment {
                 });
     }
 
-    private void loadCharts(String type) {
-        db.collection("Daily_Consumption")
-                .orderBy("timestamp", Query.Direction.ASCENDING)
-                .limit(7)
-                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                    @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-
-
-                        barChartConsumption.clear();
-                        barChartConsumption.invalidate();
-
-                        List<BarEntry> barEntryList = new ArrayList<>();
-                        List<String> labels = new ArrayList<>();
-                        int index = 0;
-
-
-                        String valueField = type.equals("food") ? "food" : "drink";
-                        for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                            Double value = doc.getDouble(valueField);
-                            Timestamp times = doc.getTimestamp("timestamp");
-
-                            if (value != null && times != null) {
-                                Date date = times.toDate();
-                                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM", Locale.getDefault());
-                                String labelWaktu = sdf.format(date);
-
-                                barEntryList.add(new BarEntry(index, value.floatValue()));
-                                labels.add(labelWaktu);
-                                index++;
-                            }
-                        }
-
-                        if (barEntryList.isEmpty()) {
-                            barChartConsumption.clear();
-                            barChartConsumption.setNoDataText("Belum ada data untuk ditampilkan.");
-                            barChartConsumption.invalidate();
-                            return;
-                        }
-
-
-                        int color = type.equals("food") ? Color.parseColor("#FF9800") : Color.parseColor("#2196F3");
-                        String labelText = type.equals("food") ? "Makanan (gram)" : "Minuman (ml)";
-
-                        BarDataSet dataSet = new BarDataSet(barEntryList, labelText);
-                        dataSet.setColors(color);
-                        dataSet.setValueTextSize(12f);
-                        dataSet.setValueTextColor(Color.BLACK);
-
-                        BarData barData = new BarData(dataSet);
-                        barData.setBarWidth(0.8f);
-                        barChartConsumption.setData(barData);
-
-
-                        barChartConsumption.setDrawBarShadow(false);
-                        barChartConsumption.getDescription().setEnabled(false);
-                        barChartConsumption.setDrawGridBackground(false);
-                        barChartConsumption.setPinchZoom(false);
-                        barChartConsumption.getDescription().setText(type.equals("food") ? "Konsumsi Makanan Harian" : "Konsumsi Minuman Harian");
-
-
-
-
-                        XAxis xAxis = barChartConsumption.getXAxis();
-                        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
-                        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-                        xAxis.setGranularity(1f);
-                        xAxis.setDrawGridLines(false);
-
-
-                        xAxis.setLabelCount(labels.size(), true);
-                        xAxis.setAxisMinimum(-0.5f);
-                        xAxis.setAxisMaximum(labels.size() - 0.5f);
-
-
-                        xAxis.setDrawLabels(true);
-                        xAxis.setTextColor(Color.DKGRAY);
-                        xAxis.setTextSize(10f);
-                        xAxis.setLabelRotationAngle(45f);
-
-
-                        barChartConsumption.getAxisRight().setEnabled(false);
-                        barChartConsumption.getAxisLeft().setGranularity(10f);
-                        barChartConsumption.getAxisLeft().setAxisMinimum(0f);
-                        barChartConsumption.setExtraBottomOffset(25f);
-                        barChartConsumption.setExtraLeftOffset(5f);
-
-                        barChartConsumption.notifyDataSetChanged();
-
-                        barChartConsumption.animateY(1200);
-                        barChartConsumption.setFitBars(true);
-                        barChartConsumption.invalidate();
-                        Log.i(TAG, "Chart berhasil dimuat dengan " + barEntryList.size() + " entri.");
-
-                    }
-                });
-
-    }
-
-    private void loadSpinner() {
-        String[] items = {"Food", "Water"};
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, items);
-        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spiConsumption.setAdapter(arrayAdapter);
-
-        spiConsumption.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                if (position == 0) {
-                    loadCharts("food");
-                } else {
-                    loadCharts("drink");
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-            }
-        });
-    }
     private void calculateStreak(){
         SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd",Locale.getDefault());
         String todaydate = date.format(new Date());
@@ -291,6 +185,27 @@ public class ProgressFragment extends Fragment {
                         }
                         else{
                             Log.e(TAG, "Gagal memuat data", task.getException());
+                        }
+                    }
+                });
+    }
+    private void countSchedules(){
+        String userID = mAuth.getCurrentUser().getUid();
+        db.collection("History")
+                .whereEqualTo("Id_User", userID)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            int totalSchedules = task.getResult().size();
+
+                            txvSchedule.setText(String.valueOf(totalSchedules));
+
+                            Log.d(TAG, "Total jadwal ditemukan: " + totalSchedules);
+                        } else {
+                            Log.e(TAG, "Error mendapatkan jumlah jadwal", task.getException());
+                            txvSchedule.setText("0");
                         }
                     }
                 });
@@ -478,8 +393,159 @@ public class ProgressFragment extends Fragment {
                     }
                 });
     }
-    public void toHistory(){
-        Intent intent = new Intent(requireContext(), HistoryActivity.class);
-        startActivity(intent);
+    private void loadHistoryList(){
+        adapter = new HistoryAdapter(historyList);
+        rvFeedingHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvFeedingHistory.setAdapter(adapter);
+    }
+    private void showDateDropdown(View view){
+        PopupMenu datePopup = new PopupMenu(requireContext(),view);
+        datePopup.getMenuInflater().inflate(R.menu.datefilter, datePopup.getMenu());
+
+        datePopup.setOnMenuItemClickListener(item -> {
+            Calendar calendar = Calendar.getInstance();
+            int itemID = item.getItemId();
+            if(itemID == R.id.filter_today){
+                txvSelectedDate.setText("Today ⌵");
+                filterByTodayDate();
+                return true;
+            } else if (itemID == R.id.filter_yesterday) {
+                calendar.add(Calendar.DATE, -1);
+                txvSelectedDate.setText("Yesterday ⌵");
+                filterByYesterdayDate();
+                return true;
+            } else if (itemID == R.id.filter_week) {
+                txvSelectedDate.setText("Last 7 Days ⌵");
+                filterByLastWeek();
+                return true;
+            }
+            return false;
+        });
+        datePopup.show();
+    }
+    private void fetchHistoryLog(){
+        rtRef = FirebaseDatabase.getInstance().getReference("pawfeeder/log_history");
+        String userID = mAuth.getCurrentUser().getUid();
+
+        rtRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                if(snapshot.exists()){
+                    String key = snapshot.getKey();
+                    String title = snapshot.child("Title").getValue(String.class);
+                    Number portion = (Number) snapshot.child("portion").getValue();
+                    String status = snapshot.child("status").getValue(String.class);
+                    String timestamp = snapshot.child("timestamp").getValue(String.class);
+                    String type = snapshot.child("type").getValue(String.class);
+
+                    Map<String, Object> history = new HashMap<>();
+                    history.put("Id_User", userID);
+                    history.put("ScheduleID", key);
+                    history.put("Title", title);
+                    history.put("Portion", portion != null ? portion.intValue() : 0);
+                    history.put("Status", status);
+                    history.put("Timestamp", timestamp);
+                    history.put("Type", type);
+
+                    db.collection("History")
+                            .add(history)
+                            .addOnSuccessListener(documentReference -> {
+                                Log.d("Firestore", "Success");
+                                rtRef.child(key).removeValue();
+                            })
+                            .addOnFailureListener(e -> Log.e("Firestore", "Failed" , e));
+                }
+            }
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+    private void loadHistoryLog(){
+        fetchHistoryLog();
+        String userID = mAuth.getCurrentUser().getUid();
+
+        db.collection("History")
+                .whereEqualTo("Id_User", userID)
+                .orderBy("Timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    allhistoryList.clear();
+                    for(QueryDocumentSnapshot document : queryDocumentSnapshots){
+                        History history = document.toObject(History.class);
+                        allhistoryList.add(history);
+                    }
+                    txvSelectedDate.setText("Today ⌵");
+                    filterByTodayDate();
+                    adapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> Log.e("History", "Failed", e));
+    }
+    private String getDate(int daysOffset){
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DATE, daysOffset);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return sdf.format(calendar.getTime());
+    }
+    private void filterByTodayDate(){
+        String todayDate = getDate(0);
+
+        List<History> filterTodayList = new ArrayList<>();
+
+        for(History h : allhistoryList){
+            String timestamp = h.getTimestamp();
+            if (timestamp != null && timestamp.length() >= 10) {
+                String date = timestamp.substring(0, 10);
+
+                if (date.equals(todayDate)) {
+                    filterTodayList.add(h);
+                }
+            }
+        }
+        updateView(filterTodayList);
+    }
+    private void filterByYesterdayDate(){
+        String todayDate = getDate(-1);
+
+        List<History> filterYesterdayList = new ArrayList<>();
+
+        for(History h : allhistoryList){
+            String timestamp = h.getTimestamp();
+            if (timestamp != null && timestamp.length() >= 10) {
+                String date = timestamp.substring(0, 10);
+
+                if (date.equals(todayDate)) {
+                    filterYesterdayList.add(h);
+                }
+            }
+        }
+        updateView(filterYesterdayList);
+    }
+    private void filterByLastWeek(){
+        List<History> filterLastWeekList = new ArrayList<>();
+
+        String limitDate = getDate(-7);
+        String todayDate = getDate(0);
+
+        for (History h : allhistoryList) {
+            String timestamp = h.getTimestamp();
+            if (timestamp != null && timestamp.length() >= 10) {
+                String docDate = timestamp.substring(0, 10);
+                if (docDate.compareTo(limitDate) >= 0 && docDate.compareTo(todayDate) <= 0) {
+                    filterLastWeekList.add(h);
+                }
+            }
+        }
+        updateView(filterLastWeekList);
+    }
+    private void updateView(List<History> newList) {
+        historyList.clear();
+        historyList.addAll(newList);
+        adapter.notifyDataSetChanged();
     }
 }

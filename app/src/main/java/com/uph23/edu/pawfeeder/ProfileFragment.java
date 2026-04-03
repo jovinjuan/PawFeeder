@@ -38,9 +38,8 @@ import java.util.Map;
 public class ProfileFragment extends Fragment {
     ImageView imgProfile;
     LinearLayout btnAccount, btnLogout;
-    TextView txvNama, txvTitle, txvLevel, txvCurrentLevel, txvXp, txvLevelProgress, txvViewAll, txvNoBadges,txvBadgesName, txvBadgesProgress;
-    RecyclerView recBadges;
-    ProgressBar pro_level,proBadges;
+    TextView txvNama, txvTitle, txvLevel, txvCurrentLevel, txvXp, txvLevelProgress;
+    ProgressBar pro_level;
     SwitchCompat switchNotif;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -108,13 +107,7 @@ public class ProfileFragment extends Fragment {
         txvCurrentLevel = view.findViewById(R.id.txvCurrentLevel);
         txvXp = view.findViewById(R.id.txvXp);
         txvLevelProgress = view.findViewById(R.id.txvLevelProgress);
-        txvViewAll = view.findViewById(R.id.txvViewAll);
-        txvNoBadges = view.findViewById(R.id.txvNoBadges);
-        txvBadgesName = view.findViewById(R.id.txvBadgesName);
-        txvBadgesProgress = view.findViewById(R.id.txvBadgesProgress);
-        recBadges = view.findViewById(R.id.recBadges);
         pro_level = view.findViewById(R.id.pro_Level);
-        proBadges = view.findViewById(R.id.proBadges);
     }
     public void loadDataUser(){
         String uid = user.getUid();

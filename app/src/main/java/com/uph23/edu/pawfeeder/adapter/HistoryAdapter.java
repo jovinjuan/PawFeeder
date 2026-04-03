@@ -61,7 +61,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             else if(type.equalsIgnoreCase("auto")){
                 holder.imgIcon.setImageResource(R.drawable.auto_feed);
             }
-            else if (type.equalsIgnoreCase("manual_touch")){
+            else if (type.equalsIgnoreCase("manual")){
                 holder.imgIcon.setImageResource(R.drawable.manual_feed);
             }
         }

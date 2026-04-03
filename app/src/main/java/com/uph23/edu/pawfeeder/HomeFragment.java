@@ -17,40 +17,62 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 import com.uph23.edu.pawfeeder.adapter.TaskAdapter;
 import com.uph23.edu.pawfeeder.model.Task;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 
 public class HomeFragment extends Fragment {
-    TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvBattery, txvUsername, btnToCreate;
-    Button btnFeedNow, btnStream;
+    TextView txvMakanan, txvStatusMakan, txvMinuman, txvStatusMinum, txvUsername, btnToCreate;
+    Button btnFeedNow;
     RecyclerView lsvTask;
     ImageView btnDone;
-    WebView imgCamera;
+    Spinner spiConsumption;
+    BarChart barChartConsumption;
     private static final String TAG = "HomeFragment";
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private ArrayList<Task> taskList;
     private TaskAdapter adapter;
-    private static final long REFRESH_INTERVAL = 100;
-    private String cameraIp = "192.168.18.160";
-    private DatabaseReference cameraRef;
 
     public HomeFragment() {}
 
@@ -59,11 +81,10 @@ public class HomeFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         init(view);
-        initCameraIp();
         setupFirestore();
         readData();
         setupServoControl();
-        liveCamera();
+        loadSpinner();
 
         btnToCreate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,14 +92,10 @@ public class HomeFragment extends Fragment {
                 toCreateTask();
             }
         });
-        startStream();
-
-
-
         return view;
     }
 
-    @Override public void onResume() { super.onResume(); loadTasks(); liveCamera();  }
+    @Override public void onResume() { super.onResume(); loadTasks(); }
 
     public void toCreateTask(){
         Intent intent = new Intent (requireContext(), CreateTaskActivity.class);
@@ -90,14 +107,13 @@ public class HomeFragment extends Fragment {
         txvStatusMakan = view.findViewById(R.id.txvStatusMakan);
         txvMinuman = view.findViewById(R.id.txvMinuman);
         txvStatusMinum = view.findViewById(R.id.txvStatusMinum);
-        txvBattery = view.findViewById(R.id.txvBattery);
         txvUsername = view.findViewById(R.id.txvUsername);
-        imgCamera = view.findViewById(R.id.imgCamera);
         btnFeedNow = view.findViewById(R.id.btnFeed);
-        btnStream = view.findViewById(R.id.btnStream);
         btnDone = view.findViewById(R.id.btnDone);
         btnToCreate = view.findViewById(R.id.btnToCreate);
         lsvTask = view.findViewById(R.id.lsvTask);
+        spiConsumption = view.findViewById(R.id.spiConsumption);
+        barChartConsumption = view.findViewById(R.id.barChartConsumption);
     }
 
     public void setupFirestore() {
@@ -159,13 +175,13 @@ public class HomeFragment extends Fragment {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     FirebaseDatabase.getInstance()
-                            .getReference("pawfeeder/makan/servo")
+                            .getReference("pawfeeder/makan/kendali_servo")
                             .setValue(true);
                     return true;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     FirebaseDatabase.getInstance()
-                            .getReference("pawfeeder/makan/servo")
+                            .getReference("pawfeeder/makan/kendali_servo")
                             .setValue(false);
                     return true;
             }
@@ -178,34 +194,30 @@ public class HomeFragment extends Fragment {
                 if (snapshot.exists()) {
                     Integer stokMakanan = snapshot.child("makan/stok_makanan").getValue(Integer.class);
                     Integer stokMinuman = snapshot.child("minum/stok_minuman").getValue(Integer.class);
-                    Long battery = snapshot.child("baterai/persentase").getValue(Long.class);
 
                     txvMakanan.setText(stokMakanan != null ? stokMakanan + "% left" : "N/A");
                     txvMinuman.setText(stokMinuman != null ? stokMinuman + "% left" : "N/A");
-                    txvBattery.setText(battery != null ? battery + "%" : "0%");
 
-                    // Logika Status Makanan
                     if (stokMakanan != null) {
                         if (stokMakanan > 50) {
                             txvStatusMakan.setText("Good");
-                            txvStatusMakan.setTextColor(Color.GREEN); // Hijau
+                            txvStatusMakan.setTextColor(Color.GREEN);
                         } else {
                             txvStatusMakan.setText("Refill");
-                            txvStatusMakan.setTextColor(Color.RED); // Merah
+                            txvStatusMakan.setTextColor(Color.RED);
                         }
                     } else {
                         txvStatusMakan.setText("N/A");
                         txvStatusMakan.setTextColor(Color.GRAY);
                     }
 
-                    // Logika Status Minuman
                     if (stokMinuman != null) {
                         if (stokMinuman > 50) {
                             txvStatusMinum.setText("Good");
-                            txvStatusMinum.setTextColor(Color.GREEN); // Hijau
+                            txvStatusMinum.setTextColor(Color.GREEN);
                         } else {
                             txvStatusMinum.setText("Refill");
-                            txvStatusMinum.setTextColor(Color.RED); // Merah
+                            txvStatusMinum.setTextColor(Color.RED);
                         }
                     } else {
                         txvStatusMinum.setText("N/A");
@@ -220,70 +232,6 @@ public class HomeFragment extends Fragment {
             }
         });
     }
-
-    public void startStream() {
-        DatabaseReference streamRef = FirebaseDatabase.getInstance().getReference("pawfeeder/camera/stream_status");
-
-        final boolean[] isStreaming = {false};
-
-        streamRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Boolean status = snapshot.getValue(Boolean.class);
-                if (status != null) {
-                    isStreaming[0] = status;
-                    updateButtonUi(isStreaming[0]);
-                    if (!isStreaming[0] && imgCamera != null) {
-                        imgCamera.stopLoading();
-                        imgCamera.loadUrl("about:blank");
-                        imgCamera.setBackgroundColor(Color.BLACK);
-                    }
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Gagal membaca status stream awal dari Firebase", error.toException());
-            }
-        });
-
-        btnStream.setOnClickListener(v -> {
-            isStreaming[0] = !isStreaming[0];
-
-            streamRef.setValue(isStreaming[0])
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "Perintah Stream dikirim ke Firebase: " + isStreaming[0]);
-                        updateButtonUi(isStreaming[0]);
-
-                        if (isStreaming[0]) {
-                            liveCamera();
-                        } else {
-                            if (imgCamera != null) {
-                                imgCamera.stopLoading();
-                                imgCamera.loadUrl("about:blank");
-                                imgCamera.setBackgroundColor(Color.BLACK);
-                            }
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Gagal mengirim perintah Stream ke Firebase", e);
-                        // Kembalikan status jika gagal
-                        isStreaming[0] = !isStreaming[0];
-                        updateButtonUi(isStreaming[0]); // Perbarui UI kembali ke status lama
-                    });
-        });
-    }
-
-    private void updateButtonUi(boolean streaming) {
-        if (streaming) {
-            btnStream.setText("STOP STREAMING");
-            btnStream.setBackgroundColor(Color.parseColor("#FF4081"));
-        } else {
-            btnStream.setText("START STREAM");
-            btnStream.setBackgroundColor(Color.parseColor("#4CAF50"));
-        }
-    }
-
-
     public void readData() {
         if (auth.getCurrentUser() == null) {
             txvUsername.setText("Hi, Guest");
@@ -304,113 +252,160 @@ public class HomeFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> txvUsername.setText("Hi, User"));
     }
-    private void liveCamera() {
-        if (imgCamera == null) {
-            Log.e(TAG, "WebView imgCamera NULL! Tidak bisa load stream.");
+    private void loadCharts(String type) {
+        db.collection("Daily_Consumption")
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .limit(7)
+                .get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+
+
+                        barChartConsumption.clear();
+                        barChartConsumption.invalidate();
+
+                        List<BarEntry> barEntryList = new ArrayList<>();
+                        List<String> labels = new ArrayList<>();
+                        int index = 0;
+
+
+                        String valueField = type.equals("food") ? "food" : "drink";
+                        for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                            Double value = doc.getDouble(valueField);
+                            Timestamp times = doc.getTimestamp("timestamp");
+
+                            if (value != null && times != null) {
+                                Date date = times.toDate();
+                                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM", Locale.getDefault());
+                                String labelWaktu = sdf.format(date);
+
+                                barEntryList.add(new BarEntry(index, value.floatValue()));
+                                labels.add(labelWaktu);
+                                index++;
+                            }
+                        }
+
+                        if (barEntryList.isEmpty()) {
+                            barChartConsumption.clear();
+                            barChartConsumption.setNoDataText("Belum ada data untuk ditampilkan.");
+                            barChartConsumption.invalidate();
+                            return;
+                        }
+
+
+                        int color = type.equals("food") ? Color.parseColor("#FF9800") : Color.parseColor("#2196F3");
+                        String labelText = type.equals("food") ? "Makanan (gram)" : "Minuman (ml)";
+
+                        BarDataSet dataSet = new BarDataSet(barEntryList, labelText);
+                        dataSet.setColors(color);
+                        dataSet.setValueTextSize(12f);
+                        dataSet.setValueTextColor(Color.BLACK);
+
+                        BarData barData = new BarData(dataSet);
+                        barData.setBarWidth(0.8f);
+                        barChartConsumption.setData(barData);
+
+
+                        barChartConsumption.setDrawBarShadow(false);
+                        barChartConsumption.getDescription().setEnabled(false);
+                        barChartConsumption.setDrawGridBackground(false);
+                        barChartConsumption.setPinchZoom(false);
+                        barChartConsumption.getDescription().setText(type.equals("food") ? "Konsumsi Makanan Harian" : "Konsumsi Minuman Harian");
+
+
+
+
+                        XAxis xAxis = barChartConsumption.getXAxis();
+                        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
+                        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                        xAxis.setGranularity(1f);
+                        xAxis.setDrawGridLines(false);
+
+
+                        xAxis.setLabelCount(labels.size(), true);
+                        xAxis.setAxisMinimum(-0.5f);
+                        xAxis.setAxisMaximum(labels.size() - 0.5f);
+
+
+                        xAxis.setDrawLabels(true);
+                        xAxis.setTextColor(Color.DKGRAY);
+                        xAxis.setTextSize(10f);
+                        xAxis.setLabelRotationAngle(45f);
+
+
+                        barChartConsumption.getAxisRight().setEnabled(false);
+                        barChartConsumption.getAxisLeft().setGranularity(10f);
+                        barChartConsumption.getAxisLeft().setAxisMinimum(0f);
+                        barChartConsumption.setExtraBottomOffset(25f);
+                        barChartConsumption.setExtraLeftOffset(5f);
+
+                        barChartConsumption.notifyDataSetChanged();
+
+                        barChartConsumption.animateY(1200);
+                        barChartConsumption.setFitBars(true);
+                        barChartConsumption.invalidate();
+                        Log.i(TAG, "Chart berhasil dimuat dengan " + barEntryList.size() + " entri.");
+
+                    }
+                });
+
+    }
+    private void loadSpinner() {
+        String[] items = {"Food", "Water"};
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, items);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spiConsumption.setAdapter(arrayAdapter);
+
+        spiConsumption.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                if (position == 0) {
+                    loadCharts("food");
+                } else {
+                    loadCharts("drink");
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+    }
+    private void loadtoDailyConsumption(long amount,String itemType){
+
+        if (db == null) {
+            Log.e(TAG, "Firestore belum diinisialisasi.");
             return;
         }
 
-        Log.i(TAG, "Memulai load kamera → http://" + cameraIp + "/stream");
 
-        // Setup WebView
-        imgCamera.getSettings().setUserAgentString("Mozilla/5.0 ESP32-CAM");
-        imgCamera.getSettings().setJavaScriptEnabled(true);
-        imgCamera.getSettings().setLoadWithOverviewMode(true);
-        imgCamera.getSettings().setUseWideViewPort(true);
-        imgCamera.getSettings().setCacheMode(android.webkit.WebSettings.LOAD_NO_CACHE);
-        imgCamera.setBackgroundColor(Color.BLACK);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String documentId = sdf.format(new Date());
 
-        imgCamera.setWebViewClient(new WebViewClient() {
 
-            @Override
-            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                Log.w(TAG, "Mulai menghubungi ESP32-CAM: " + url);
-            }
+        String fieldName = (itemType.equals("Makanan")) ? "food" : "drink";
 
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                Log.i(TAG, "KAMERA BERHASIL TERKONEKSI & MENAMPILKAN STREAM! → " + url);
-            }
 
-            @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                super.onReceivedError(view, errorCode, description, failingUrl);
-                Log.e(TAG, "GAGAL TERKONEKSI KE KAMERA! Error " + errorCode + ": " + description);
-                Log.e(TAG, "URL yang gagal: " + failingUrl);
+        Map<String, Object> consumptionData = new HashMap<>();
 
-                // Auto retry setelah 4 detik
-                new Handler().postDelayed(() -> {
-                    Log.w(TAG, "Mencoba reconnect ke kamera...");
-                    liveCamera();
-                }, 4000);
-            }
+        consumptionData.put(fieldName, FieldValue.increment(amount));
+        consumptionData.put("timestamp", FieldValue.serverTimestamp());
 
-            @Override
-            public void onReceivedHttpError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceResponse errorResponse) {
-                super.onReceivedHttpError(view, request, errorResponse);
-                int statusCode = errorResponse.getStatusCode();
-                Log.e(TAG, "HTTP ERROR dari ESP32: " + statusCode + " → " + errorResponse.getReasonPhrase());
-                if (statusCode == 404) {
-                    Log.e(TAG, "Endpoint tidak ada! Coba ganti /stream → /mjpeg/1 atau sebaliknya");
-                }
-            }
-        });
 
-        String streamUrl = "http://" + cameraIp + ":81/stream";
-        imgCamera.loadUrl(streamUrl);
-        Log.d(TAG, "loadUrl dipanggil: " + streamUrl);
-    }
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (imgCamera != null) {
-            imgCamera.stopLoading();
-            imgCamera.loadUrl("about:blank");
-            imgCamera.clearHistory();
-            imgCamera.clearCache(true);
-            imgCamera = null;
-        }
-    }
-    private void initCameraIp() {
-        cameraRef = FirebaseDatabase.getInstance().getReference("pawfeeder/camera/camera_ip");
-        cameraRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String ip = snapshot.getValue(String.class);
-                if (ip != null && !ip.isEmpty()) {
-                    if (!ip.equals(cameraIp)) {
-                        Log.w(TAG, "IP KAMERA BERUBAH! Dari " + cameraIp + " → " + ip);
-                        cameraIp = ip;
-                        restartLiveCamera();
-                    } else {
-                        Log.d(TAG, "IP kamera tetap: " + ip);
+        db.collection("Daily_Consumption")
+                .document(documentId)
+                .set(consumptionData, SetOptions.merge())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Konsumsi harian (" + itemType + ": " + amount + ") berhasil dicatat ke Firestore.");
                     }
-                } else {
-                    Log.e(TAG, "IP kamera di Firebase kosong atau null");
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Gagal baca camera_ip dari Firebase", error.toException());
-            }
-        });
-    }
-
-    private void restartLiveCamera() {
-        if (imgCamera != null) {
-            imgCamera.loadUrl("about:blank");
-            liveCamera();
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (imgCamera != null) {
-            imgCamera.stopLoading();
-        }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "Gagal mencatat konsumsi harian ke Firestore.", e);
+                    }
+                });
     }
 }
