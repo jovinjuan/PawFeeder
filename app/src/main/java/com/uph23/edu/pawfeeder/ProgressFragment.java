@@ -152,7 +152,8 @@ public class ProgressFragment extends Fragment {
                             double totalDrinkL = totalDrink / 1000.0;
 
                             String formattedFeed = String.format(Locale.US, "%.1f", totalFeedKg);
-                            String formattedDrink = String.format(Locale.US, "%.1f", totalDrinkL);
+                            String formattedDrink = String.format(Locale.US, "%.1" +
+                                    "f", totalDrinkL);
 
                             txvFeed.setText(formattedFeed);
                             txvDrink.setText(formattedDrink);
@@ -451,6 +452,10 @@ public class ProgressFragment extends Fragment {
                             .add(history)
                             .addOnSuccessListener(documentReference -> {
                                 Log.d("Firestore", "Success");
+
+                                if(status.equalsIgnoreCase("SUCCESS")){
+                                    addFeedingExp(userID);
+                                }
                                 rtRef.child(key).removeValue();
                             })
                             .addOnFailureListener(e -> Log.e("Firestore", "Failed" , e));
@@ -548,4 +553,47 @@ public class ProgressFragment extends Fragment {
         historyList.addAll(newList);
         adapter.notifyDataSetChanged();
     }
+    private void addFeedingExp(String userId) {
+        DocumentReference expRef = db.collection("Exp").document(userId);
+
+        db.runTransaction(transaction -> {
+                    DocumentSnapshot snapshot = transaction.get(expRef);
+
+                    long currentExp = 0L;
+                    long level = 1L;
+                    long nextLevel = 100L;
+                    String title = "Paw Novice";
+
+                    if (snapshot.exists()) {
+                        if (snapshot.contains("Jumlah_Exp")) currentExp = snapshot.getLong("Jumlah_Exp");
+                        if (snapshot.contains("Level")) level = snapshot.getLong("Level");
+                        if (snapshot.contains("ExpNextLevel")) nextLevel = snapshot.getLong("ExpNextLevel");
+                        if (snapshot.contains("Title")) title = snapshot.getString("Title");
+                    }
+
+                    long newExp = currentExp + 20;
+
+                    while (newExp >= nextLevel) {
+                        newExp -= nextLevel;
+                        level++;
+                        nextLevel = 100 * level;
+                    }
+
+                    if (level <= 5) title = "Paw Novice";
+                    else if (level <= 10) title = "Paw Feeder";
+                    else if (level <= 20) title = "Paw Master";
+                    else title = "Paw Legend";
+
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("Jumlah_Exp", newExp);
+                    data.put("Level", level);
+                    data.put("ExpNextLevel", nextLevel);
+                    data.put("Title", title);
+
+                    transaction.set(expRef, data, SetOptions.merge());
+                    return null;
+                }).addOnSuccessListener(unused -> Log.d("EXP", "Feeding XP updated for: " + userId))
+                .addOnFailureListener(e -> Log.e("EXP", "Failed to update feeding exp", e));
+    }
+
 }

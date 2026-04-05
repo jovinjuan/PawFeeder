@@ -371,41 +371,4 @@ public class HomeFragment extends Fragment {
             }
         });
     }
-    private void loadtoDailyConsumption(long amount,String itemType){
-
-        if (db == null) {
-            Log.e(TAG, "Firestore belum diinisialisasi.");
-            return;
-        }
-
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String documentId = sdf.format(new Date());
-
-
-        String fieldName = (itemType.equals("Makanan")) ? "food" : "drink";
-
-
-        Map<String, Object> consumptionData = new HashMap<>();
-
-        consumptionData.put(fieldName, FieldValue.increment(amount));
-        consumptionData.put("timestamp", FieldValue.serverTimestamp());
-
-
-        db.collection("Daily_Consumption")
-                .document(documentId)
-                .set(consumptionData, SetOptions.merge())
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Konsumsi harian (" + itemType + ": " + amount + ") berhasil dicatat ke Firestore.");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Gagal mencatat konsumsi harian ke Firestore.", e);
-                    }
-                });
-    }
 }
