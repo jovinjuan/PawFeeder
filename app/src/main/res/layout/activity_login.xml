@@ -164,7 +164,7 @@
 
                 <Button
                     android:id="@+id/btnSubmit"
-                    android:layout_width="335dp"
+                    android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:text="Sign In"
                     android:textStyle="bold"

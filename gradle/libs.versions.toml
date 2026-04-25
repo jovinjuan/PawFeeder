@@ -13,6 +13,7 @@ firebaseFirestore = "26.0.2"
 firebaseDatabase = "22.0.1"
 firebaseStorage = "22.0.1"
 cardview = "1.0.0"
+firebaseMessaging = "25.0.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -28,6 +29,7 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database",
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 mpandroidchart = {module = "com.github.PhilJay:MPAndroidChart", version = "v3.1.0"}
 cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

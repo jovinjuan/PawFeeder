@@ -1,10 +1,14 @@
 package com.uph23.edu.pawfeeder;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,6 +52,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.uph23.edu.pawfeeder.adapter.TaskAdapter;
 import com.uph23.edu.pawfeeder.model.Task;
 
@@ -199,7 +204,7 @@ public class HomeFragment extends Fragment {
                     txvMinuman.setText(stokMinuman != null ? stokMinuman + "% left" : "N/A");
 
                     if (stokMakanan != null) {
-                        if (stokMakanan > 50) {
+                        if (stokMakanan >= 30) {
                             txvStatusMakan.setText("Good");
                             txvStatusMakan.setTextColor(Color.GREEN);
                         } else {
@@ -212,7 +217,7 @@ public class HomeFragment extends Fragment {
                     }
 
                     if (stokMinuman != null) {
-                        if (stokMinuman > 50) {
+                        if (stokMinuman > 30) {
                             txvStatusMinum.setText("Good");
                             txvStatusMinum.setTextColor(Color.GREEN);
                         } else {

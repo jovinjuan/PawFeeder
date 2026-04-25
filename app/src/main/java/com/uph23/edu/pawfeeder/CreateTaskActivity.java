@@ -144,9 +144,6 @@ public class CreateTaskActivity extends AppCompatActivity {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        // Pilih salah satu: Simpan via model Task atau Map
-        // Contoh pakai Map supaya field nama tepat sesuai di Firestore
         Map<String, Object> data = new HashMap<>();
         data.put("Title", title);
         data.put("Description", desc);

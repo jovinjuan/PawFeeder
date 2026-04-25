@@ -127,7 +127,7 @@ public class CreateScheduleActivity extends AppCompatActivity {
            Map<String, Object> autoData = new HashMap<>();
            autoData.put("feed_date", feeddate);
            autoData.put("feed_time", feedtime);
-           autoData.put("portion",portion);
+           autoData.put("portion", portion);
            myRef.child(key).setValue(autoData);
 
            Toast.makeText(this, "Feeding Schedule has been set", Toast.LENGTH_SHORT).show();
@@ -144,7 +144,6 @@ public class CreateScheduleActivity extends AppCompatActivity {
        int hour = calendar.get(Calendar.HOUR_OF_DAY);
        int minute = calendar.get(Calendar.MINUTE);
 
-       // Parse waktu yang sudah ada (jika ada)
        if (!selectedTime.equals("")) {
            String[] parts = selectedTime.split(":");
            hour = Integer.parseInt(parts[0]);
@@ -152,7 +151,7 @@ public class CreateScheduleActivity extends AppCompatActivity {
        }
 
        MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
-               .setTimeFormat(TimeFormat.CLOCK_24H)     // 24 jam (Indonesia standard)
+               .setTimeFormat(TimeFormat.CLOCK_24H)
                .setHour(hour)
                .setMinute(minute)
                .setTitleText("Choose Feeding Time")
@@ -164,10 +163,8 @@ public class CreateScheduleActivity extends AppCompatActivity {
                int selectedHour = timePicker.getHour();
                int selectedMinute = timePicker.getMinute();
 
-               // Format jadi String HH:mm (2 digit)
                selectedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute);
 
-               // Tampilkan ke EditText
                edtFeedingTime.setText(selectedTime);
            }
        });
